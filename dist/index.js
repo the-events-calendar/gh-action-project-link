@@ -160,8 +160,8 @@ function projectLink() {
         const queryString = `G24.boxer`; // @todo replace this with the actual query string
         // First, use the GraphQL API to request the template project's node ID.
         const searchResp = yield octokit.graphql(`query {
-      ${ownerType}(login:${issueOwnerName}) {
-        projectsV2(first:100 query:${queryString}) {
+      ${ownerType}(login:"${issueOwnerName}") {
+        projectsV2(first:100 query:"${queryString}") {
           totalCount
           edges {
             node {
