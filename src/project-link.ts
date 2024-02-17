@@ -173,63 +173,34 @@ export async function projectLink(): Promise<void> {
     return
   }
 
-  const project = foundNodes?.edges[0]
+  const project = foundNodes?.edges[0]?.node
 
   if (!project) {
     core.info(`No projects found for ${issueOwnerName} with query ${queryString}`)
     return
   }
 
-  core.debug(`Found project: ${project.node.title} (Number: ${project.node.number})(ID: ${project.node.id})`)
+  core.info(`Found project: ${project.title} (Number: ${project.number})(ID: ${project.id})`)
 
-  return
-  // @todo implement the rest of the function
+  core.info('Adding PR to project')
 
-  // Next, use the GraphQL API to add the issue to the project.
-  // If the issue has the same owner as the project, we can directly
-  // add a project item. Otherwise, we add a draft issue.
-  if (templateProjectOwnerName && templateProjectId && issueOwnerName === templateProjectOwnerName) {
-    core.info('Creating project item')
-
-    const addResp = await octokit.graphql<ProjectAddItemResponse>(
-      `mutation addIssueToProject($input: AddProjectV2ItemByIdInput!) {
-        addProjectV2ItemById(input: $input) {
-          item {
-            id
-          }
+  const addResp = await octokit.graphql<ProjectAddItemResponse>(
+    `mutation addIssueToProject($input: AddProjectV2ItemByIdInput!) {
+      addProjectV2ItemById(input: $input) {
+        item {
+          id
         }
-      }`,
-      {
-        input: {
-          templateProjectId,
-          contentId,
-        },
+      }
+    }`,
+    {
+      input: {
+        projectId: project.id,
+        contentId,
       },
-    )
+    },
+  )
 
-    core.setOutput('itemId', addResp.addProjectV2ItemById.item.id)
-  } else {
-    core.info('Creating draft issue in project')
-
-    const addResp = await octokit.graphql<ProjectV2AddDraftIssueResponse>(
-      `mutation addDraftIssueToProject($projectId: ID!, $title: String!) {
-        addProjectV2DraftIssue(input: {
-          projectId: $projectId,
-          title: $title
-        }) {
-          projectItem {
-            id
-          }
-        }
-      }`,
-      {
-        templateProjectId,
-        title: issue?.html_url,
-      },
-    )
-
-    core.setOutput('itemId', addResp.addProjectV2DraftIssue.projectItem.id)
-  }
+  core.setOutput('itemId', addResp.addProjectV2ItemById.item.id)
 }
 
 export function mustGetOwnerTypeQuery(ownerType?: string): 'organization' | 'user' {
