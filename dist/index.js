@@ -159,9 +159,9 @@ function projectLink() {
         core.debug(`Content ID: ${contentId}`);
         const queryString = `G24.boxer`; // @todo replace this with the actual query string
         // First, use the GraphQL API to request the template project's node ID.
-        const searchResp = yield octokit.graphql(`query getProjects($queryString: String!, $issueOwnerName: String!) {
-      ${ownerType}(login:$issueOwnerName) {
-        projectsV2(first:100 query:$queryString) {
+        const searchResp = yield octokit.graphql(`query {
+      ${ownerType}(login:${issueOwnerName}) {
+        projectsV2(first:100 query:${queryString}) {
           totalCount
           edges {
             node {
@@ -172,10 +172,7 @@ function projectLink() {
           }
         }
       }
-    }`, {
-            issueOwnerName,
-            queryString,
-        });
+    }`);
         const foundNodes = (_k = searchResp[ownerType]) === null || _k === void 0 ? void 0 : _k.projectV2;
         if ((foundNodes === null || foundNodes === void 0 ? void 0 : foundNodes.totalCount) === 0) {
             core.info(`No projects found for ${issueOwnerName} with query ${queryString}`);
