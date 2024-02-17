@@ -5,6 +5,10 @@ branding:
   icon: layout
   color: white
 inputs:
+  owner-type:
+    required: true
+    default: 'organization'
+    description: The type of the owner of the repository. Can be either 'organization' or 'user'
   base-branch-matches:
     required: false
     description: A regular expression to match the base branch name. If not provided, the action will match all base branches

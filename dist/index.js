@@ -85,12 +85,12 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.mustGetOwnerTypeQuery = exports.projectLink = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
-const urlParse = /\/(?<ownerType>orgs|users)\/(?<ownerName>[^/]+)\/projects\/(?<projectNumber>\d+)/;
+const projectUrlParse = /\/(?<ownerType>orgs|users)\/(?<ownerName>[^/]+)\/projects\/(?<projectNumber>\d+)/;
 function projectLink() {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
     return __awaiter(this, void 0, void 0, function* () {
-        const projectUrl = core.getInput('project-url', { required: true });
         const ghToken = core.getInput('github-token', { required: true });
+        const ownerType = mustGetOwnerTypeQuery(core.getInput('owner-type', { required: true }));
         const labeled = (_a = core
             .getInput('labeled')
             .split(',')
@@ -122,37 +122,75 @@ function projectLink() {
                 return;
             }
         }
-        core.debug(`Project URL: ${projectUrl}`);
-        const urlMatch = projectUrl.match(urlParse);
-        if (!urlMatch) {
-            throw new Error(`Invalid project URL: ${projectUrl}. Project URL should match the format <GitHub server domain name>/<orgs-or-users>/<ownerName>/projects/<projectNumber>`);
+        const projectTemplateUrl = core.getInput('template-project-url');
+        let templateProjectOwnerName;
+        let templateProjectId;
+        if (projectTemplateUrl) {
+            core.debug(`Project URL: ${projectTemplateUrl}`);
+            const urlMatch = projectTemplateUrl.match(projectUrlParse);
+            if (!urlMatch) {
+                throw new Error(`Invalid project URL: ${projectTemplateUrl}. Project URL should match the format <GitHub server domain name>/<orgs-or-users>/<ownerName>/projects/<projectNumber>`);
+            }
+            templateProjectOwnerName = (_e = urlMatch.groups) === null || _e === void 0 ? void 0 : _e.ownerName;
+            const templateProjectNumber = parseInt((_g = (_f = urlMatch.groups) === null || _f === void 0 ? void 0 : _f.projectNumber) !== null && _g !== void 0 ? _g : '', 10);
+            const templateProjectOwnerType = (_h = urlMatch.groups) === null || _h === void 0 ? void 0 : _h.ownerType;
+            const templateProjectOwnerTypeQuery = mustGetOwnerTypeQuery(templateProjectOwnerType);
+            core.debug(`Project Template owner: ${templateProjectOwnerName}`);
+            core.debug(`Project Template number: ${templateProjectNumber}`);
+            core.debug(`Project Template owner type: ${templateProjectOwnerType}`);
+            // First, use the GraphQL API to request the template project's node ID.
+            const idResp = yield octokit.graphql(`query getProject($projectOwnerName: String!, $projectNumber: Int!) {
+          ${templateProjectOwnerTypeQuery}(login: $projectOwnerName) {
+            projectV2(number: $projectNumber) {
+              id
+            }
+          }
+        }`, {
+                templateProjectOwnerName,
+                templateProjectNumber,
+            });
+            templateProjectId = (_j = idResp[templateProjectOwnerTypeQuery]) === null || _j === void 0 ? void 0 : _j.projectV2.id;
+            core.debug(`Project node ID: ${templateProjectId}`);
         }
-        const projectOwnerName = (_e = urlMatch.groups) === null || _e === void 0 ? void 0 : _e.ownerName;
-        const projectNumber = parseInt((_g = (_f = urlMatch.groups) === null || _f === void 0 ? void 0 : _f.projectNumber) !== null && _g !== void 0 ? _g : '', 10);
-        const ownerType = (_h = urlMatch.groups) === null || _h === void 0 ? void 0 : _h.ownerType;
-        const ownerTypeQuery = mustGetOwnerTypeQuery(ownerType);
-        core.debug(`Project owner: ${projectOwnerName}`);
-        core.debug(`Project number: ${projectNumber}`);
-        core.debug(`Project owner type: ${ownerType}`);
-        // First, use the GraphQL API to request the project's node ID.
-        const idResp = yield octokit.graphql(`query getProject($projectOwnerName: String!, $projectNumber: Int!) {
-      ${ownerTypeQuery}(login: $projectOwnerName) {
-        projectV2(number: $projectNumber) {
-          id
+        else {
+            core.info(`No template project URL provided. Will create a project without a template.`);
+        }
+        const contentId = issue === null || issue === void 0 ? void 0 : issue.node_id;
+        core.debug(`Content ID: ${contentId}`);
+        const queryString = `G24.boxer`; // @todo replace this with the actual query string
+        // First, use the GraphQL API to request the template project's node ID.
+        const searchResp = yield octokit.graphql(`query getProjects(queryString: String!, $issueOwnerName: String!) {
+      ${ownerType}(login:$issueOwnerName) {
+        projectsV2(first:100 query:$queryString) {
+          totalCount
+          edges {
+            node {
+              id
+              title
+              number
+            }
+          }
         }
       }
     }`, {
-            projectOwnerName,
-            projectNumber,
+            issueOwnerName,
+            queryString,
         });
-        const projectId = (_j = idResp[ownerTypeQuery]) === null || _j === void 0 ? void 0 : _j.projectV2.id;
-        const contentId = issue === null || issue === void 0 ? void 0 : issue.node_id;
-        core.debug(`Project node ID: ${projectId}`);
-        core.debug(`Content ID: ${contentId}`);
+        const foundNodes = (_k = searchResp[ownerType]) === null || _k === void 0 ? void 0 : _k.projectV2;
+        if ((foundNodes === null || foundNodes === void 0 ? void 0 : foundNodes.totalCount) === 0) {
+            core.info(`No projects found for ${issueOwnerName} with query ${queryString}`);
+            return;
+        }
+        const [project] = (_l = foundNodes === null || foundNodes === void 0 ? void 0 : foundNodes.edges) !== null && _l !== void 0 ? _l : [];
+        if (!project) {
+            core.info(`No projects found for ${issueOwnerName} with query ${queryString}`);
+            return;
+        }
+        core.debug(`Found project: ${project.node.title} (Number: ${project.node.number})(ID: ${project.node.id})`);
         // Next, use the GraphQL API to add the issue to the project.
         // If the issue has the same owner as the project, we can directly
         // add a project item. Otherwise, we add a draft issue.
-        if (issueOwnerName === projectOwnerName) {
+        if (templateProjectOwnerName && templateProjectId && issueOwnerName === templateProjectOwnerName) {
             core.info('Creating project item');
             const addResp = yield octokit.graphql(`mutation addIssueToProject($input: AddProjectV2ItemByIdInput!) {
         addProjectV2ItemById(input: $input) {
@@ -162,7 +200,7 @@ function projectLink() {
         }
       }`, {
                 input: {
-                    projectId,
+                    templateProjectId,
                     contentId,
                 },
             });
@@ -180,7 +218,7 @@ function projectLink() {
           }
         }
       }`, {
-                projectId,
+                templateProjectId,
                 title: issue === null || issue === void 0 ? void 0 : issue.html_url,
             });
             core.setOutput('itemId', addResp.addProjectV2DraftIssue.projectItem.id);
@@ -189,11 +227,18 @@ function projectLink() {
 }
 exports.projectLink = projectLink;
 function mustGetOwnerTypeQuery(ownerType) {
-    const ownerTypeQuery = ownerType === 'orgs' ? 'organization' : ownerType === 'users' ? 'user' : null;
-    if (!ownerTypeQuery) {
-        throw new Error(`Unsupported ownerType: ${ownerType}. Must be one of 'orgs' or 'users'`);
+    const validOrganizationTypes = ['orgs', 'organization', 'org', 'organizations'];
+    const validUserTypes = ['users', 'user'];
+    if (!ownerType) {
+        throw new Error(`Empty ownerType.`);
     }
-    return ownerTypeQuery;
+    if (validOrganizationTypes.includes(ownerType)) {
+        return 'organization';
+    }
+    else if (validUserTypes.includes(ownerType)) {
+        return 'user';
+    }
+    throw new Error(`Unsupported ownerType: ${ownerType}. Must be one of 'orgs', 'organization', 'org', 'organizations' or 'users', 'user'`);
 }
 exports.mustGetOwnerTypeQuery = mustGetOwnerTypeQuery;
 
