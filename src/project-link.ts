@@ -145,24 +145,24 @@ export async function projectLink(): Promise<void> {
   core.debug(`Content ID: ${contentId}`)
 
   const queryString = `G24.boxer` // @todo replace this with the actual query string
-
-  // First, use the GraphQL API to request the template project's node ID.
-  const searchResp = await octokit.graphql<ProjectsEdgesNodesResponse>(
-    `query {
-      ${ownerType}(login:"${issueOwnerName}") {
-        projectsV2(first:100 query:"${queryString}") {
-          totalCount
-          edges {
-            node {
-              id
-              title
-              number
-            }
+  const getProjectsQuery = `query {
+    ${ownerType}(login:"${issueOwnerName}") {
+      projectsV2(first:100 query:"${queryString}") {
+        totalCount
+        edges {
+          node {
+            id
+            title
+            number
           }
         }
       }
-    }`,
-  )
+    }
+  }`
+  core.debug(`Projects Query: \n ${getProjectsQuery}`)
+
+  // First, use the GraphQL API to request the template project's node ID.
+  const searchResp = await octokit.graphql<ProjectsEdgesNodesResponse>(getProjectsQuery)
 
   const foundNodes = searchResp[ownerType]?.projectV2
 
