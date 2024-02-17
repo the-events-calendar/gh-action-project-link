@@ -87,7 +87,7 @@ const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
 const projectUrlParse = /\/(?<ownerType>orgs|users)\/(?<ownerName>[^/]+)\/projects\/(?<projectNumber>\d+)/;
 function projectLink() {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
     return __awaiter(this, void 0, void 0, function* () {
         const ghToken = core.getInput('github-token', { required: true });
         const ownerType = mustGetOwnerTypeQuery(core.getInput('owner-type', { required: true }));
@@ -181,7 +181,7 @@ function projectLink() {
             core.info(`No projects found for ${issueOwnerName} with query ${queryString}`);
             return;
         }
-        const [project] = (_l = foundNodes === null || foundNodes === void 0 ? void 0 : foundNodes.edges) !== null && _l !== void 0 ? _l : [];
+        const project = foundNodes === null || foundNodes === void 0 ? void 0 : foundNodes.edges[0];
         if (!project) {
             core.info(`No projects found for ${issueOwnerName} with query ${queryString}`);
             return;

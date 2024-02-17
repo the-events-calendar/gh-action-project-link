@@ -173,7 +173,7 @@ export async function projectLink(): Promise<void> {
     return
   }
 
-  const [project] = foundNodes?.edges ?? []
+  const project = foundNodes?.edges[0]
 
   if (!project) {
     core.info(`No projects found for ${issueOwnerName} with query ${queryString}`)
