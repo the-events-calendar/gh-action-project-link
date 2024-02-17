@@ -1,0 +1,55 @@
+{
+  "name": "@the-events-calendar/gh-action-project-link",
+  "description": "Automatically adds issues and PRs to GitHub projects, based on labels and base branch names.",
+  "version": "0.1.0",
+  "author": "The Events Calendar",
+  "dependencies": {
+    "@actions/core": "^1.10.1",
+    "@actions/github": "^6.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">= 9.0.0"
+  },
+  "devDependencies": {
+    "@github/prettier-config": "^0.0.6",
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.11.16",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "@vercel/ncc": "^0.38.1",
+    "concurrently": "^8.2.2",
+    "eslint": "^8.56.0",
+    "eslint-plugin-github": "^4.10.1",
+    "eslint-plugin-jest": "^27.6.3",
+    "eslint-plugin-prettier": "^5.1.3",
+    "jest": "^29.7.0",
+    "prettier": "^3.2.5",
+    "ts-jest": "^29.1.2",
+    "typescript": "^5.3.3"
+  },
+  "keywords": [
+    "actions",
+    "node",
+    "setup"
+  ],
+  "license": "MIT",
+  "main": "lib/main.js",
+  "prettier": "@github/prettier-config",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/the-events-calendar/gh-action-project-link.git"
+  },
+  "scripts": {
+    "build": "npm run fix:format && npm run check && npm run build:compile && npm run build:package",
+    "build:compile": "tsc",
+    "build:package": "ncc build --source-map --license licenses.txt",
+    "check": "concurrently -n check: -c red,green,blue -g npm:check:*",
+    "check:build": "tsc --noEmit",
+    "check:format": "prettier --check .",
+    "check:lint": "eslint .",
+    "fix:format": "prettier --write .",
+    "test": "jest"
+  }
+}

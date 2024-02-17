@@ -1,0 +1,31 @@
+name: Project Link
+description: Automatically add PRs to GitHub projects based on the base branch
+author: The Events Calendar
+branding:
+  icon: layout
+  color: white
+inputs:
+  base-branch-matches:
+    required: false
+    description: A regular expression to match the base branch name. If not provided, the action will match all base branches
+  base-branch-replace:
+    required: false
+    description: A regular expression to replace the base branch name to create the Project. If not provided, the base branch name will be used as the project name
+  template-project-url:
+    required: false
+    description: Which template to use to create the project. If not provided, the default project template will be used.
+  labeled:
+    required: false
+    description: A comma-separated list of labels to use as a filter for issue to be added
+  label-operator:
+    required: false
+    description: The behavior of the labels filter, AND to match all labels, OR to match any label, NOT to exclude any listed label (default is OR)
+  github-token:
+    required: true
+    description: A GitHub personal access token with write access to the project
+outputs:
+  itemId:
+    description: The ID of the item that was added to the project
+runs:
+  using: 'node20'
+  main: 'dist/index.js'
