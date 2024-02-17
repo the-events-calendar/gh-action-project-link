@@ -175,6 +175,7 @@ function projectLink() {
         core.debug(`Projects Query: \n ${getProjectsQuery}`);
         // First, use the GraphQL API to request the template project's node ID.
         const searchResp = yield octokit.graphql(getProjectsQuery);
+        core.debug(`Search Response: ${JSON.stringify(searchResp)}`);
         const foundNodes = (_k = searchResp[ownerType]) === null || _k === void 0 ? void 0 : _k.projectV2;
         if ((foundNodes === null || foundNodes === void 0 ? void 0 : foundNodes.totalCount) === 0) {
             core.info(`No projects found for ${issueOwnerName} with query ${queryString}`);
