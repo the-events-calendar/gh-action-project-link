@@ -86,8 +86,17 @@ exports.mustGetOwnerTypeQuery = exports.projectLink = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
 const projectUrlParse = /\/(?<ownerType>orgs|users)\/(?<ownerName>[^/]+)\/projects\/(?<projectNumber>\d+)/;
+/*
+interface ProjectV2AddDraftIssueResponse {
+  addProjectV2DraftIssue: {
+    projectItem: {
+      id: string
+    }
+  }
+}
+*/
 function projectLink() {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
     return __awaiter(this, void 0, void 0, function* () {
         const ghToken = core.getInput('github-token', { required: true });
         const ownerType = mustGetOwnerTypeQuery(core.getInput('owner-type', { required: true }));
@@ -181,50 +190,27 @@ function projectLink() {
             core.info(`No projects found for ${issueOwnerName} with query ${queryString}`);
             return;
         }
-        const project = foundNodes === null || foundNodes === void 0 ? void 0 : foundNodes.edges[0];
+        const project = (_l = foundNodes === null || foundNodes === void 0 ? void 0 : foundNodes.edges[0]) === null || _l === void 0 ? void 0 : _l.node;
         if (!project) {
             core.info(`No projects found for ${issueOwnerName} with query ${queryString}`);
             return;
         }
-        core.debug(`Found project: ${project.node.title} (Number: ${project.node.number})(ID: ${project.node.id})`);
-        return;
-        // @todo implement the rest of the function
-        // Next, use the GraphQL API to add the issue to the project.
-        // If the issue has the same owner as the project, we can directly
-        // add a project item. Otherwise, we add a draft issue.
-        if (templateProjectOwnerName && templateProjectId && issueOwnerName === templateProjectOwnerName) {
-            core.info('Creating project item');
-            const addResp = yield octokit.graphql(`mutation addIssueToProject($input: AddProjectV2ItemByIdInput!) {
-        addProjectV2ItemById(input: $input) {
-          item {
-            id
-          }
+        core.info(`Found project: ${project.title} (Number: ${project.number})(ID: ${project.id})`);
+        core.info('Adding PR to project');
+        const addResp = yield octokit.graphql(`mutation addIssueToProject($input: AddProjectV2ItemByIdInput!) {
+      addProjectV2ItemById(input: $input) {
+        item {
+          id
         }
-      }`, {
-                input: {
-                    templateProjectId,
-                    contentId,
-                },
-            });
-            core.setOutput('itemId', addResp.addProjectV2ItemById.item.id);
-        }
-        else {
-            core.info('Creating draft issue in project');
-            const addResp = yield octokit.graphql(`mutation addDraftIssueToProject($projectId: ID!, $title: String!) {
-        addProjectV2DraftIssue(input: {
-          projectId: $projectId,
-          title: $title
-        }) {
-          projectItem {
-            id
-          }
-        }
-      }`, {
-                templateProjectId,
-                title: issue === null || issue === void 0 ? void 0 : issue.html_url,
-            });
-            core.setOutput('itemId', addResp.addProjectV2DraftIssue.projectItem.id);
-        }
+      }
+    }`, {
+            input: {
+                projectId: project.id,
+                contentId,
+            },
+        });
+        core.debug(`Search Response: \n ${JSON.stringify(addResp, null, 2)}`);
+        core.setOutput('itemId', addResp.addProjectV2ItemById.item.id);
     });
 }
 exports.projectLink = projectLink;

@@ -49,6 +49,7 @@ interface ProjectAddItemResponse {
   }
 }
 
+/*
 interface ProjectV2AddDraftIssueResponse {
   addProjectV2DraftIssue: {
     projectItem: {
@@ -56,6 +57,7 @@ interface ProjectV2AddDraftIssueResponse {
     }
   }
 }
+*/
 
 export async function projectLink(): Promise<void> {
   const ghToken = core.getInput('github-token', {required: true})
@@ -199,6 +201,8 @@ export async function projectLink(): Promise<void> {
       },
     },
   )
+
+  core.debug(`Search Response: \n ${JSON.stringify(addResp, null, 2)}`)
 
   core.setOutput('itemId', addResp.addProjectV2ItemById.item.id)
 }
