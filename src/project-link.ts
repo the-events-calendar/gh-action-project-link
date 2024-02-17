@@ -164,7 +164,7 @@ export async function projectLink(): Promise<void> {
   // First, use the GraphQL API to request the template project's node ID.
   const searchResp = await octokit.graphql<ProjectsEdgesNodesResponse>(getProjectsQuery)
 
-  core.debug(`Search Response: ${JSON.stringify(searchResp)}`)
+  core.debug(`Search Response: \n ${JSON.stringify(searchResp, null, 2)}`)
 
   const foundNodes = searchResp[ownerType]?.projectV2
 
