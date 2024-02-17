@@ -27,14 +27,14 @@ interface ProjectNode {
 
 interface ProjectsEdgesNodesResponse {
   organization?: {
-    projectV2: {
+    projectsV2: {
       totalCount: number
       edges: ProjectNode[]
     }
   }
 
   user?: {
-    projectV2: {
+    projectsV2: {
       totalCount: number
       edges: ProjectNode[]
     }
@@ -166,7 +166,7 @@ export async function projectLink(): Promise<void> {
 
   core.debug(`Search Response: \n ${JSON.stringify(searchResp, null, 2)}`)
 
-  const foundNodes = searchResp[ownerType]?.projectV2
+  const foundNodes = searchResp[ownerType]?.projectsV2
 
   if (foundNodes?.totalCount === 0) {
     core.info(`No projects found for ${issueOwnerName} with query ${queryString}`)
