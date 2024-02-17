@@ -184,6 +184,9 @@ export async function projectLink(): Promise<void> {
 
   core.debug(`Found project: ${project.node.title} (Number: ${project.node.number})(ID: ${project.node.id})`)
 
+  return
+  // @todo implement the rest of the function
+
   // Next, use the GraphQL API to add the issue to the project.
   // If the issue has the same owner as the project, we can directly
   // add a project item. Otherwise, we add a draft issue.
