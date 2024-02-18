@@ -215,7 +215,7 @@ function projectLink() {
         }
         else {
             const getOwnerQuery = `query {
-      user(login:"${projectOwner}") {
+      ${ownerType}(login:"${templateProjectOwnerName}") {
         id
       }
     }`;
@@ -223,10 +223,10 @@ function projectLink() {
             // First, use the GraphQL API to request the template project's node ID.
             const ownerResp = yield octokit.graphql(getOwnerQuery);
             core.debug(`Owner Response: \n ${JSON.stringify(ownerResp, null, 2)}`);
-            if (!((_o = ownerResp === null || ownerResp === void 0 ? void 0 : ownerResp.user) === null || _o === void 0 ? void 0 : _o.id)) {
+            if (!((_o = ownerResp[ownerType]) === null || _o === void 0 ? void 0 : _o.id)) {
                 throw new Error(`No owner found for ${projectOwner}`);
             }
-            const projectOwnerID = (_p = ownerResp === null || ownerResp === void 0 ? void 0 : ownerResp.user) === null || _p === void 0 ? void 0 : _p.id;
+            const projectOwnerID = (_p = ownerResp[ownerType]) === null || _p === void 0 ? void 0 : _p.id;
             const copyProjectTemplateResp = yield octokit.graphql(`mutation createProjectFromTemplate($input: CopyProjectV2Input!) {
         copyProjectV2(input: $input) {
           projectV2 {

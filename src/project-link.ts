@@ -18,8 +18,11 @@ interface ProjectNodeIDResponse {
   }
 }
 
-interface UserResponse {
+interface OwnerResponse {
   user?: {
+    id: string
+  }
+  organization?: {
     id: string
   }
 }
@@ -220,22 +223,22 @@ export async function projectLink(): Promise<void> {
     core.info(`Found project: ${project.title} (Number: ${project.number})(ID: ${project.id})`)
   } else {
     const getOwnerQuery = `query {
-      user(login:"${projectOwner}") {
+      ${ownerType}(login:"${templateProjectOwnerName}") {
         id
       }
     }`
     core.debug(`Project Owner Query: \n ${getOwnerQuery}`)
 
     // First, use the GraphQL API to request the template project's node ID.
-    const ownerResp = await octokit.graphql<UserResponse>(getOwnerQuery)
+    const ownerResp = await octokit.graphql<OwnerResponse>(getOwnerQuery)
 
     core.debug(`Owner Response: \n ${JSON.stringify(ownerResp, null, 2)}`)
 
-    if (!ownerResp?.user?.id) {
+    if (!ownerResp[ownerType]?.id) {
       throw new Error(`No owner found for ${projectOwner}`)
     }
 
-    const projectOwnerID = ownerResp?.user?.id
+    const projectOwnerID = ownerResp[ownerType]?.id
 
     const copyProjectTemplateResp = await octokit.graphql<ProjectCopyTemplateResponse>(
       `mutation createProjectFromTemplate($input: CopyProjectV2Input!) {
