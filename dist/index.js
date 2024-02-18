@@ -88,7 +88,7 @@ const github = __importStar(__nccwpck_require__(5438));
 const minimatch_1 = __nccwpck_require__(1953);
 const projectUrlParse = /\/(?<ownerType>orgs|users)\/(?<ownerName>[^/]+)\/projects\/(?<projectNumber>\d+)/;
 function projectLink() {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p;
     return __awaiter(this, void 0, void 0, function* () {
         const ghToken = core.getInput('github-token', { required: true });
         const projectOwner = core.getInput('project-owner', { required: true });
@@ -223,10 +223,10 @@ function projectLink() {
             // First, use the GraphQL API to request the template project's node ID.
             const ownerResp = yield octokit.graphql(getOwnerQuery);
             core.debug(`Owner Response: \n ${JSON.stringify(ownerResp, null, 2)}`);
-            if (!((_p = (_o = ownerResp === null || ownerResp === void 0 ? void 0 : ownerResp.data) === null || _o === void 0 ? void 0 : _o.user) === null || _p === void 0 ? void 0 : _p.id)) {
+            if (!((_o = ownerResp === null || ownerResp === void 0 ? void 0 : ownerResp.user) === null || _o === void 0 ? void 0 : _o.id)) {
                 throw new Error(`No owner found for ${projectOwner}`);
             }
-            const projectOwnerID = (_r = (_q = ownerResp === null || ownerResp === void 0 ? void 0 : ownerResp.data) === null || _q === void 0 ? void 0 : _q.user) === null || _r === void 0 ? void 0 : _r.id;
+            const projectOwnerID = (_p = ownerResp === null || ownerResp === void 0 ? void 0 : ownerResp.user) === null || _p === void 0 ? void 0 : _p.id;
             const copyProjectTemplateResp = yield octokit.graphql(`mutation createProjectFromTemplate($input: CopyProjectV2Input!) {
         copyProjectV2(input: $input) {
           projectV2 {

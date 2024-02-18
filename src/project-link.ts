@@ -19,10 +19,8 @@ interface ProjectNodeIDResponse {
 }
 
 interface UserResponse {
-  data: {
-    user?: {
-      id: string
-    }
+  user?: {
+    id: string
   }
 }
 
@@ -233,11 +231,11 @@ export async function projectLink(): Promise<void> {
 
     core.debug(`Owner Response: \n ${JSON.stringify(ownerResp, null, 2)}`)
 
-    if (!ownerResp?.data?.user?.id) {
+    if (!ownerResp?.user?.id) {
       throw new Error(`No owner found for ${projectOwner}`)
     }
 
-    const projectOwnerID = ownerResp?.data?.user?.id
+    const projectOwnerID = ownerResp?.user?.id
 
     const copyProjectTemplateResp = await octokit.graphql<ProjectCopyTemplateResponse>(
       `mutation createProjectFromTemplate($input: CopyProjectV2Input!) {
