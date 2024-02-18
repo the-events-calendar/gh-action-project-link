@@ -55,6 +55,10 @@ interface ProjectAddItemResponse {
   addProjectV2ItemById: {
     item: {
       id: string
+      project: {
+        id: string
+        url: string
+      }
     }
   }
 }
@@ -112,9 +116,6 @@ export async function projectLink(): Promise<void> {
   const octokit = github.getOctokit(ghToken)
 
   const issue = github.context.payload.issue ?? github.context.payload.pull_request
-
-  core.debug(`PR Payload: \n ${JSON.stringify(issue, null, 2)}`)
-
   const issueLabels: string[] = (issue?.labels ?? []).map((l: {name: string}) => l.name.toLowerCase())
   const issueOwnerName = github.context.payload.repository?.owner.login
 
@@ -290,6 +291,8 @@ export async function projectLink(): Promise<void> {
 
   core.debug(`Add to Project Response: \n ${JSON.stringify(addResp, null, 2)}`)
 
+  core.info(`Pull Request: ${issue?.html_url}`)
+  core.info(`Project: ${addResp.addProjectV2ItemById.item.project.url}`)
   core.setOutput('itemId', addResp.addProjectV2ItemById.item.id)
 }
 

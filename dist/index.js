@@ -124,7 +124,6 @@ function projectLink() {
         const labelOperator = core.getInput('label-operator').trim().toLocaleLowerCase();
         const octokit = github.getOctokit(ghToken);
         const issue = (_c = github.context.payload.issue) !== null && _c !== void 0 ? _c : github.context.payload.pull_request;
-        core.debug(`PR Payload: \n ${JSON.stringify(issue, null, 2)}`);
         const issueLabels = ((_d = issue === null || issue === void 0 ? void 0 : issue.labels) !== null && _d !== void 0 ? _d : []).map((l) => l.name.toLowerCase());
         const issueOwnerName = (_e = github.context.payload.repository) === null || _e === void 0 ? void 0 : _e.owner.login;
         core.debug(`Issue/PR owner: ${issueOwnerName}`);
@@ -263,6 +262,8 @@ function projectLink() {
             },
         });
         core.debug(`Add to Project Response: \n ${JSON.stringify(addResp, null, 2)}`);
+        core.info(`Pull Request: ${issue === null || issue === void 0 ? void 0 : issue.html_url}`);
+        core.info(`Project: ${addResp.addProjectV2ItemById.item.project.url}`);
         core.setOutput('itemId', addResp.addProjectV2ItemById.item.id);
     });
 }
