@@ -244,11 +244,13 @@ function projectLink() {
             core.debug(`Copy Project Template Response: \n ${JSON.stringify(copyProjectTemplateResp, null, 2)}`);
             projectId = copyProjectTemplateResp.copyProjectV2.projectV2.id;
         }
-        core.info('Adding PR to project');
+        core.info(`Adding issue ${issue === null || issue === void 0 ? void 0 : issue.number} to project ${projectId}`);
         const addResp = yield octokit.graphql(`mutation addIssueToProject($input: AddProjectV2ItemByIdInput!) {
       addProjectV2ItemById(input: $input) {
         item {
           id
+          title
+          url
         }
       }
     }`, {
@@ -257,7 +259,7 @@ function projectLink() {
                 contentId,
             },
         });
-        core.debug(`Search Response: \n ${JSON.stringify(addResp, null, 2)}`);
+        core.debug(`Add to Project Response: \n ${JSON.stringify(addResp, null, 2)}`);
         core.setOutput('itemId', addResp.addProjectV2ItemById.item.id);
     });
 }

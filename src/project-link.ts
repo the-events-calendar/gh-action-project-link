@@ -260,13 +260,15 @@ export async function projectLink(): Promise<void> {
     projectId = copyProjectTemplateResp.copyProjectV2.projectV2.id
   }
 
-  core.info('Adding PR to project')
+  core.info(`Adding issue ${issue?.number} to project ${projectId}`)
 
   const addResp = await octokit.graphql<ProjectAddItemResponse>(
     `mutation addIssueToProject($input: AddProjectV2ItemByIdInput!) {
       addProjectV2ItemById(input: $input) {
         item {
           id
+          title
+          url
         }
       }
     }`,
@@ -278,7 +280,7 @@ export async function projectLink(): Promise<void> {
     },
   )
 
-  core.debug(`Search Response: \n ${JSON.stringify(addResp, null, 2)}`)
+  core.debug(`Add to Project Response: \n ${JSON.stringify(addResp, null, 2)}`)
 
   core.setOutput('itemId', addResp.addProjectV2ItemById.item.id)
 }
