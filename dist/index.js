@@ -164,9 +164,9 @@ function projectLink() {
             core.debug(`Project Template number: ${templateProjectNumber}`);
             core.debug(`Project Template owner type: ${templateProjectOwnerType}`);
             // First, use the GraphQL API to request the template project's node ID.
-            const idResp = yield octokit.graphql(`query getProject($projectOwnerName: String!, $projectNumber: Int!) {
-          ${templateProjectOwnerTypeQuery}(login: $projectOwnerName) {
-            projectV2(number: $projectNumber) {
+            const idResp = yield octokit.graphql(`query getProject($templateProjectOwnerName: String!, $templateProjectNumber: Int!) {
+          ${templateProjectOwnerTypeQuery}(login: $templateProjectOwnerName) {
+            projectV2(number: $templateProjectNumber) {
               id
             }
           }

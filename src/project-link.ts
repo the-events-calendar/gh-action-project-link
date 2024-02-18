@@ -160,9 +160,9 @@ export async function projectLink(): Promise<void> {
 
     // First, use the GraphQL API to request the template project's node ID.
     const idResp = await octokit.graphql<ProjectNodeIDResponse>(
-      `query getProject($projectOwnerName: String!, $projectNumber: Int!) {
-          ${templateProjectOwnerTypeQuery}(login: $projectOwnerName) {
-            projectV2(number: $projectNumber) {
+      `query getProject($templateProjectOwnerName: String!, $templateProjectNumber: Int!) {
+          ${templateProjectOwnerTypeQuery}(login: $templateProjectOwnerName) {
+            projectV2(number: $templateProjectNumber) {
               id
             }
           }
