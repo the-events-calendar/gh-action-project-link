@@ -231,6 +231,8 @@ export async function projectLink(): Promise<void> {
     // First, use the GraphQL API to request the template project's node ID.
     const ownerResp = await octokit.graphql<UserResponse>(getOwnerQuery)
 
+    core.debug(`Owner Response: \n ${JSON.stringify(ownerResp, null, 2)}`)
+
     if (!ownerResp?.data?.user?.id) {
       throw new Error(`No owner found for ${projectOwner}`)
     }

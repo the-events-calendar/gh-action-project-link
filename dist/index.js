@@ -222,6 +222,7 @@ function projectLink() {
             core.debug(`Project Owner Query: \n ${getOwnerQuery}`);
             // First, use the GraphQL API to request the template project's node ID.
             const ownerResp = yield octokit.graphql(getOwnerQuery);
+            core.debug(`Owner Response: \n ${JSON.stringify(ownerResp, null, 2)}`);
             if (!((_p = (_o = ownerResp === null || ownerResp === void 0 ? void 0 : ownerResp.data) === null || _o === void 0 ? void 0 : _o.user) === null || _p === void 0 ? void 0 : _p.id)) {
                 throw new Error(`No owner found for ${projectOwner}`);
             }
