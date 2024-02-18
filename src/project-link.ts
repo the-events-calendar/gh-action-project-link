@@ -1,5 +1,6 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
+import {minimatch} from 'minimatch'
 
 const projectUrlParse = /\/(?<ownerType>orgs|users)\/(?<ownerName>[^/]+)\/projects\/(?<projectNumber>\d+)/
 
@@ -12,6 +13,14 @@ interface ProjectNodeIDResponse {
 
   user?: {
     projectV2: {
+      id: string
+    }
+  }
+}
+
+interface UserResponse {
+  data: {
+    user?: {
       id: string
     }
   }
@@ -49,19 +58,47 @@ interface ProjectAddItemResponse {
   }
 }
 
-/*
-interface ProjectV2AddDraftIssueResponse {
-  addProjectV2DraftIssue: {
-    projectItem: {
+interface ProjectCopyTemplateResponse {
+  copyProjectV2: {
+    projectV2: {
       id: string
     }
   }
 }
-*/
 
 export async function projectLink(): Promise<void> {
   const ghToken = core.getInput('github-token', {required: true})
+  const projectOwner = core.getInput('project-owner', {required: true})
   const ownerType = mustGetOwnerTypeQuery(core.getInput('owner-type', {required: true}))
+
+  const baseBranchPattern = core.getInput('base-branch-pattern')
+  const baseBranch = github.context.payload.pull_request?.base.ref
+
+  if (baseBranchPattern) {
+    if (!minimatch(baseBranch, baseBranchPattern)) {
+      core.info(`Skipping issue because base branch ${baseBranch} does not match pattern ${baseBranchPattern}`)
+      return
+    }
+  }
+
+  let projectName = baseBranch
+  const prefixRemove = core.getInput('name-prefix-remove')
+  const sufixRemove = core.getInput('name-sufix-remove')
+  const replaceWithSpaces = core.getInput('name-replace-with-spaces')
+
+  if (prefixRemove) {
+    projectName = projectName.replace(new RegExp(`^${prefixRemove}`, 'i'), '')
+  }
+
+  if (sufixRemove) {
+    projectName = projectName.replace(new RegExp(`${sufixRemove}$`, 'i'), '')
+  }
+
+  if (replaceWithSpaces) {
+    for (const charToReplace of replaceWithSpaces.split('')) {
+      projectName = projectName.replace(new RegExp(charToReplace, 'g'), ' ')
+    }
+  }
 
   const labeled =
     core
@@ -146,7 +183,7 @@ export async function projectLink(): Promise<void> {
   const contentId = issue?.node_id
   core.debug(`Content ID: ${contentId}`)
 
-  const queryString = `G24.boxer` // @todo replace this with the actual query string
+  const queryString = projectName // @todo replace this with the actual query string
   const getProjectsQuery = `query {
     ${ownerType}(login:"${issueOwnerName}") {
       projectsV2(first:100 query:"${queryString}") {
@@ -169,20 +206,59 @@ export async function projectLink(): Promise<void> {
   core.debug(`Search Response: \n ${JSON.stringify(searchResp, null, 2)}`)
 
   const foundNodes = searchResp[ownerType]?.projectsV2
+  let projectId
 
-  if (foundNodes?.totalCount === 0) {
+  if (foundNodes?.totalCount !== 0) {
     core.info(`No projects found for ${issueOwnerName} with query ${queryString}`)
-    return
+    const project = foundNodes?.edges[0]?.node
+
+    if (!project) {
+      core.info(`No projects found for ${issueOwnerName} with query ${queryString}`)
+      return
+    }
+
+    projectId = project.id
+
+    core.info(`Found project: ${project.title} (Number: ${project.number})(ID: ${project.id})`)
+  } else {
+    const getOwnerQuery = `query {
+      user(login:"${projectOwner}") {
+        id
+      }
+    }`
+    core.debug(`Project Owner Query: \n ${getOwnerQuery}`)
+
+    // First, use the GraphQL API to request the template project's node ID.
+    const ownerResp = await octokit.graphql<UserResponse>(getOwnerQuery)
+
+    if (!ownerResp?.data?.user?.id) {
+      throw new Error(`No owner found for ${projectOwner}`)
+    }
+
+    const projectOwnerID = ownerResp?.data?.user?.id
+
+    const copyProjectTemplateResp = await octokit.graphql<ProjectCopyTemplateResponse>(
+      `mutation createProjectFromTemplate($input: CopyProjectV2Input!) {
+        copyProjectV2(input: $input) {
+          projectV2 {
+            id
+          }
+        }
+      }`,
+      {
+        input: {
+          includeDraftIssues: false,
+          projectId: templateProjectId,
+          title: projectName,
+          ownerId: projectOwnerID,
+        },
+      },
+    )
+
+    core.debug(`Copy Project Template Response: \n ${JSON.stringify(copyProjectTemplateResp, null, 2)}`)
+
+    projectId = copyProjectTemplateResp.copyProjectV2.projectV2.id
   }
-
-  const project = foundNodes?.edges[0]?.node
-
-  if (!project) {
-    core.info(`No projects found for ${issueOwnerName} with query ${queryString}`)
-    return
-  }
-
-  core.info(`Found project: ${project.title} (Number: ${project.number})(ID: ${project.id})`)
 
   core.info('Adding PR to project')
 
@@ -196,7 +272,7 @@ export async function projectLink(): Promise<void> {
     }`,
     {
       input: {
-        projectId: project.id,
+        projectId,
         contentId,
       },
     },

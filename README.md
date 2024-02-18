@@ -25,10 +25,13 @@ Once you've configured your workflow, save it as a `.yml` file in your target Re
 
 ## Inputs
 
-- <a name="base-branch-matches">`base-branch-matches`</a> **(optional)** is a regular expression (or glob) to match the base branch name. If not provided, the action will match all base branches
+- <a name="base-branch-pattern">`base-branch-pattern`</a> **(optional)** is a glob pattern to match the base branch name. If not provided, the action will match all base branches
   _eg: `release/*`_ will match `release/1.0`, `release/2.0`, etc.
-- <a name="base-branch-replace">`base-branch-replace`</a> **(optional)** is a regular expression to replace the base branch name to create the Project. If not provided, the base branch name will be used as the project name
-  _eg: `release/(.*)`_ will replace `release/1.0` with `1.0`
+- <a name="name-prefix-remove">`name-prefix-remove`</a> **(optional)** Its a string to remove from the beginning of the base branch before searching for a project. If not provided, the action will use the base branch as is
+  _eg: `release/`_ will remove `release/` from `release/Z24.kamehameha`
+- <a name="name-suffix-remove">`name-suffix-remove`</a> **(optional)** It is a string to remove from the end of the base branch before searching for a project. If not provided, the action will use the base branch as is
+  _eg: `-hotfix`_ will remove `-hotfix` from `release/Z24.kamehameha-hotfix`
+- <a name="name-replace-with-spaces">`name-replace-with-spaces`</a> **(optional)** Its a colection of chars to replace with spaces in the base branch before searching for a project. If not provided, the action will use the base branch as is.
 - <a name="template-project-url">`template-project-url`</a> **(optional)** is the URL of the project to use as a template for the new project. If not provided, the action will create a new project
   \_eg: `https://github.com/orgs|users/<ownerName>/projects/<projectNumber>`
 - <a name="github-token">`github-token`</a> **(required)** is a [personal access
