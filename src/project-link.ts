@@ -267,8 +267,10 @@ export async function projectLink(): Promise<void> {
       addProjectV2ItemById(input: $input) {
         item {
           id
-          title
-          url
+          project {
+            url
+            title
+          }
         }
       }
     }`,

@@ -249,8 +249,10 @@ function projectLink() {
       addProjectV2ItemById(input: $input) {
         item {
           id
-          title
-          url
+          project {
+            url
+            title
+          }
         }
       }
     }`, {
