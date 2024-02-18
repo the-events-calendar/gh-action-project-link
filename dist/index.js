@@ -204,7 +204,6 @@ function projectLink() {
         const foundNodes = (_l = searchResp[ownerType]) === null || _l === void 0 ? void 0 : _l.projectsV2;
         let projectId;
         if ((foundNodes === null || foundNodes === void 0 ? void 0 : foundNodes.totalCount) !== 0) {
-            core.info(`No projects found for ${issueOwnerName} with query ${queryString}`);
             const project = (_m = foundNodes === null || foundNodes === void 0 ? void 0 : foundNodes.edges[0]) === null || _m === void 0 ? void 0 : _m.node;
             if (!project) {
                 core.info(`No projects found for ${issueOwnerName} with query ${queryString}`);
