@@ -124,6 +124,7 @@ function projectLink() {
         const labelOperator = core.getInput('label-operator').trim().toLocaleLowerCase();
         const octokit = github.getOctokit(ghToken);
         const issue = (_c = github.context.payload.issue) !== null && _c !== void 0 ? _c : github.context.payload.pull_request;
+        core.debug(`PR Payload: \n ${JSON.stringify(issue, null, 2)}`);
         const issueLabels = ((_d = issue === null || issue === void 0 ? void 0 : issue.labels) !== null && _d !== void 0 ? _d : []).map((l) => l.name.toLowerCase());
         const issueOwnerName = (_e = github.context.payload.repository) === null || _e === void 0 ? void 0 : _e.owner.login;
         core.debug(`Issue/PR owner: ${issueOwnerName}`);
@@ -182,7 +183,7 @@ function projectLink() {
         }
         const contentId = issue === null || issue === void 0 ? void 0 : issue.node_id;
         core.debug(`Content ID: ${contentId}`);
-        const queryString = projectName; // @todo replace this with the actual query string
+        const queryString = projectName;
         const getProjectsQuery = `query {
     ${ownerType}(login:"${issueOwnerName}") {
       projectsV2(first:100 query:"${queryString}") {
@@ -244,7 +245,7 @@ function projectLink() {
             core.debug(`Copy Project Template Response: \n ${JSON.stringify(copyProjectTemplateResp, null, 2)}`);
             projectId = copyProjectTemplateResp.copyProjectV2.projectV2.id;
         }
-        core.info(`Adding issue ${issue === null || issue === void 0 ? void 0 : issue.number} to project ${projectId}`);
+        core.info(`Adding PR ${issue === null || issue === void 0 ? void 0 : issue.number} to project ${projectId}`);
         const addResp = yield octokit.graphql(`mutation addIssueToProject($input: AddProjectV2ItemByIdInput!) {
       addProjectV2ItemById(input: $input) {
         item {

@@ -112,6 +112,9 @@ export async function projectLink(): Promise<void> {
   const octokit = github.getOctokit(ghToken)
 
   const issue = github.context.payload.issue ?? github.context.payload.pull_request
+
+  core.debug(`PR Payload: \n ${JSON.stringify(issue, null, 2)}`)
+
   const issueLabels: string[] = (issue?.labels ?? []).map((l: {name: string}) => l.name.toLowerCase())
   const issueOwnerName = github.context.payload.repository?.owner.login
 
@@ -184,7 +187,7 @@ export async function projectLink(): Promise<void> {
   const contentId = issue?.node_id
   core.debug(`Content ID: ${contentId}`)
 
-  const queryString = projectName // @todo replace this with the actual query string
+  const queryString = projectName
   const getProjectsQuery = `query {
     ${ownerType}(login:"${issueOwnerName}") {
       projectsV2(first:100 query:"${queryString}") {
@@ -263,7 +266,7 @@ export async function projectLink(): Promise<void> {
     projectId = copyProjectTemplateResp.copyProjectV2.projectV2.id
   }
 
-  core.info(`Adding issue ${issue?.number} to project ${projectId}`)
+  core.info(`Adding PR ${issue?.number} to project ${projectId}`)
 
   const addResp = await octokit.graphql<ProjectAddItemResponse>(
     `mutation addIssueToProject($input: AddProjectV2ItemByIdInput!) {
