@@ -88,13 +88,18 @@ const github = __importStar(__nccwpck_require__(5438));
 const minimatch_1 = __nccwpck_require__(1953);
 const projectUrlParse = /\/(?<ownerType>orgs|users)\/(?<ownerName>[^/]+)\/projects\/(?<projectNumber>\d+)/;
 function projectLink() {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r;
     return __awaiter(this, void 0, void 0, function* () {
         const ghToken = core.getInput('github-token', { required: true });
         const projectOwner = core.getInput('project-owner', { required: true });
         const ownerType = mustGetOwnerTypeQuery(core.getInput('owner-type', { required: true }));
-        const baseBranchPattern = core.getInput('base-branch-pattern');
-        const baseBranch = (_a = github.context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.base.ref;
+        const baseBranchPattern = (_a = core.getInput('base-branch-pattern')) !== null && _a !== void 0 ? _a : '*';
+        const octokit = github.getOctokit(ghToken);
+        const issue = (_b = github.context.payload.issue) !== null && _b !== void 0 ? _b : github.context.payload.pull_request;
+        const baseBranch = (_d = (_c = issue === null || issue === void 0 ? void 0 : issue.base) === null || _c === void 0 ? void 0 : _c.ref) !== null && _d !== void 0 ? _d : 'main';
+        if (!baseBranch) {
+            throw new Error('This action can only be run on pull_request events');
+        }
         if (baseBranchPattern) {
             if (!(0, minimatch_1.minimatch)(baseBranch, baseBranchPattern)) {
                 core.info(`Skipping issue because base branch ${baseBranch} does not match pattern ${baseBranchPattern}`);
@@ -116,16 +121,14 @@ function projectLink() {
                 projectName = projectName.replace(new RegExp(charToReplace, 'g'), ' ');
             }
         }
-        const labeled = (_b = core
+        const labeled = (_e = core
             .getInput('labeled')
             .split(',')
             .map(l => l.trim().toLowerCase())
-            .filter(l => l.length > 0)) !== null && _b !== void 0 ? _b : [];
+            .filter(l => l.length > 0)) !== null && _e !== void 0 ? _e : [];
         const labelOperator = core.getInput('label-operator').trim().toLocaleLowerCase();
-        const octokit = github.getOctokit(ghToken);
-        const issue = (_c = github.context.payload.issue) !== null && _c !== void 0 ? _c : github.context.payload.pull_request;
-        const issueLabels = ((_d = issue === null || issue === void 0 ? void 0 : issue.labels) !== null && _d !== void 0 ? _d : []).map((l) => l.name.toLowerCase());
-        const issueOwnerName = (_e = github.context.payload.repository) === null || _e === void 0 ? void 0 : _e.owner.login;
+        const issueLabels = ((_f = issue === null || issue === void 0 ? void 0 : issue.labels) !== null && _f !== void 0 ? _f : []).map((l) => l.name.toLowerCase());
+        const issueOwnerName = (_g = github.context.payload.repository) === null || _g === void 0 ? void 0 : _g.owner.login;
         core.debug(`Issue/PR owner: ${issueOwnerName}`);
         core.debug(`Issue/PR labels: ${issueLabels.join(', ')}`);
         // Ensure the issue matches our `labeled` filter based on the label-operator.
@@ -156,9 +159,9 @@ function projectLink() {
             if (!urlMatch) {
                 throw new Error(`Invalid project URL: ${projectTemplateUrl}. Project URL should match the format <GitHub server domain name>/<orgs-or-users>/<ownerName>/projects/<projectNumber>`);
             }
-            templateProjectOwnerName = (_f = urlMatch.groups) === null || _f === void 0 ? void 0 : _f.ownerName;
-            const templateProjectNumber = parseInt((_h = (_g = urlMatch.groups) === null || _g === void 0 ? void 0 : _g.projectNumber) !== null && _h !== void 0 ? _h : '', 10);
-            const templateProjectOwnerType = (_j = urlMatch.groups) === null || _j === void 0 ? void 0 : _j.ownerType;
+            templateProjectOwnerName = (_h = urlMatch.groups) === null || _h === void 0 ? void 0 : _h.ownerName;
+            const templateProjectNumber = parseInt((_k = (_j = urlMatch.groups) === null || _j === void 0 ? void 0 : _j.projectNumber) !== null && _k !== void 0 ? _k : '', 10);
+            const templateProjectOwnerType = (_l = urlMatch.groups) === null || _l === void 0 ? void 0 : _l.ownerType;
             const templateProjectOwnerTypeQuery = mustGetOwnerTypeQuery(templateProjectOwnerType);
             core.debug(`Project Template owner: ${templateProjectOwnerName}`);
             core.debug(`Project Template number: ${templateProjectNumber}`);
@@ -174,7 +177,7 @@ function projectLink() {
                 templateProjectOwnerName,
                 templateProjectNumber,
             });
-            templateProjectId = (_k = idResp[templateProjectOwnerTypeQuery]) === null || _k === void 0 ? void 0 : _k.projectV2.id;
+            templateProjectId = (_m = idResp[templateProjectOwnerTypeQuery]) === null || _m === void 0 ? void 0 : _m.projectV2.id;
             core.debug(`Project node ID: ${templateProjectId}`);
         }
         else {
@@ -201,10 +204,10 @@ function projectLink() {
         // First, use the GraphQL API to request the template project's node ID.
         const searchResp = yield octokit.graphql(getProjectsQuery);
         core.debug(`Search Response: \n ${JSON.stringify(searchResp, null, 2)}`);
-        const foundNodes = (_l = searchResp[ownerType]) === null || _l === void 0 ? void 0 : _l.projectsV2;
+        const foundNodes = (_o = searchResp[ownerType]) === null || _o === void 0 ? void 0 : _o.projectsV2;
         let projectId;
         if ((foundNodes === null || foundNodes === void 0 ? void 0 : foundNodes.totalCount) !== 0) {
-            const project = (_m = foundNodes === null || foundNodes === void 0 ? void 0 : foundNodes.edges[0]) === null || _m === void 0 ? void 0 : _m.node;
+            const project = (_p = foundNodes === null || foundNodes === void 0 ? void 0 : foundNodes.edges[0]) === null || _p === void 0 ? void 0 : _p.node;
             if (!project) {
                 core.info(`No projects found for ${issueOwnerName} with query ${queryString}`);
                 return;
@@ -222,10 +225,10 @@ function projectLink() {
             // First, use the GraphQL API to request the template project's node ID.
             const ownerResp = yield octokit.graphql(getOwnerQuery);
             core.debug(`Owner Response: \n ${JSON.stringify(ownerResp, null, 2)}`);
-            if (!((_o = ownerResp[ownerType]) === null || _o === void 0 ? void 0 : _o.id)) {
+            if (!((_q = ownerResp[ownerType]) === null || _q === void 0 ? void 0 : _q.id)) {
                 throw new Error(`No owner found for ${projectOwner}`);
             }
-            const projectOwnerID = (_p = ownerResp[ownerType]) === null || _p === void 0 ? void 0 : _p.id;
+            const projectOwnerID = (_r = ownerResp[ownerType]) === null || _r === void 0 ? void 0 : _r.id;
             const copyProjectTemplateResp = yield octokit.graphql(`mutation createProjectFromTemplate($input: CopyProjectV2Input!) {
         copyProjectV2(input: $input) {
           projectV2 {
@@ -268,10 +271,11 @@ function projectLink() {
 }
 exports.projectLink = projectLink;
 function mustGetOwnerTypeQuery(ownerType) {
+    const defaultOwnerType = 'organization';
     const validOrganizationTypes = ['orgs', 'organization', 'org', 'organizations'];
     const validUserTypes = ['users', 'user'];
     if (!ownerType) {
-        throw new Error(`Empty ownerType.`);
+        return defaultOwnerType;
     }
     if (validOrganizationTypes.includes(ownerType)) {
         return 'organization';

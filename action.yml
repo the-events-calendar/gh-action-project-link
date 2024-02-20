@@ -14,6 +14,7 @@ inputs:
     description: The Login of the owner in case we create a project.
   base-branch-pattern:
     required: false
+    default: '*'
     description: A glob pattern to match the base branch name. If not provided, the action will match all base branches
   name-prefix-remove:
     required: false

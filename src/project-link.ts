@@ -76,8 +76,15 @@ export async function projectLink(): Promise<void> {
   const projectOwner = core.getInput('project-owner', {required: true})
   const ownerType = mustGetOwnerTypeQuery(core.getInput('owner-type', {required: true}))
 
-  const baseBranchPattern = core.getInput('base-branch-pattern')
-  const baseBranch = github.context.payload.pull_request?.base.ref
+  const baseBranchPattern = core.getInput('base-branch-pattern') ?? '*'
+
+  const octokit = github.getOctokit(ghToken)
+  const issue = github.context.payload.issue ?? github.context.payload.pull_request
+  const baseBranch = issue?.base?.ref ?? 'main'
+
+  if (!baseBranch) {
+    throw new Error('This action can only be run on pull_request events')
+  }
 
   if (baseBranchPattern) {
     if (!minimatch(baseBranch, baseBranchPattern)) {
@@ -112,10 +119,6 @@ export async function projectLink(): Promise<void> {
       .map(l => l.trim().toLowerCase())
       .filter(l => l.length > 0) ?? []
   const labelOperator = core.getInput('label-operator').trim().toLocaleLowerCase()
-
-  const octokit = github.getOctokit(ghToken)
-
-  const issue = github.context.payload.issue ?? github.context.payload.pull_request
   const issueLabels: string[] = (issue?.labels ?? []).map((l: {name: string}) => l.name.toLowerCase())
   const issueOwnerName = github.context.payload.repository?.owner.login
 
@@ -296,10 +299,11 @@ export async function projectLink(): Promise<void> {
 }
 
 export function mustGetOwnerTypeQuery(ownerType?: string): 'organization' | 'user' {
+  const defaultOwnerType = 'organization'
   const validOrganizationTypes = ['orgs', 'organization', 'org', 'organizations']
   const validUserTypes = ['users', 'user']
   if (!ownerType) {
-    throw new Error(`Empty ownerType.`)
+    return defaultOwnerType
   }
 
   if (validOrganizationTypes.includes(ownerType)) {
