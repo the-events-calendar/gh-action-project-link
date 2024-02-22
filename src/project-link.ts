@@ -43,8 +43,10 @@ export async function projectLink(): Promise<void> {
   const ghToken = core.getInput('github-token', {required: true})
 
   const ownerType = mustGetOwnerTypeQuery(github.context.payload.repository?.owner.type)
-  const ownerName = github.context.payload.repository?.owner.name ?? ''
+  const ownerName = github.context.payload.repository?.owner.login ?? ''
   const ownerId = github.context.payload.repository?.owner.id ?? ''
+
+  core.debug(`Repository Payload: \n ${JSON.stringify(github.context.payload.repository, null, 2)}`)
 
   if (!ownerName || !ownerId) {
     throw new Error('Could not determine repository owner')

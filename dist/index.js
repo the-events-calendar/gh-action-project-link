@@ -115,8 +115,9 @@ function projectLink() {
     return __awaiter(this, void 0, void 0, function* () {
         const ghToken = core.getInput('github-token', { required: true });
         const ownerType = (0, utils_1.mustGetOwnerTypeQuery)((_a = github.context.payload.repository) === null || _a === void 0 ? void 0 : _a.owner.type);
-        const ownerName = (_c = (_b = github.context.payload.repository) === null || _b === void 0 ? void 0 : _b.owner.name) !== null && _c !== void 0 ? _c : '';
+        const ownerName = (_c = (_b = github.context.payload.repository) === null || _b === void 0 ? void 0 : _b.owner.login) !== null && _c !== void 0 ? _c : '';
         const ownerId = (_e = (_d = github.context.payload.repository) === null || _d === void 0 ? void 0 : _d.owner.id) !== null && _e !== void 0 ? _e : '';
+        core.debug(`Repository Payload: \n ${JSON.stringify(github.context.payload.repository, null, 2)}`);
         if (!ownerName || !ownerId) {
             throw new Error('Could not determine repository owner');
         }
