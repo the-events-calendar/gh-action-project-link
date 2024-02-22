@@ -1,7 +1,7 @@
 export interface ParseProjectName {
   baseBranch: string
   prefixRemove?: string
-  sufixRemove?: string
+  suffixRemove?: string
   replaceWithSpaces?: string
 }
 

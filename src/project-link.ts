@@ -19,7 +19,7 @@ export async function getProjectId(params: ParsedProjectUrl): Promise<string | v
   // First, use the GraphQL API to request the template project's node ID.
   const idResp = await octokit.graphql<ProjectNodeIDResponse>(
     `query getProject($ownerName: String!, $projectNumber: Int!) {
-          ${ownerType}(login: $ownerNamee) {
+          ${ownerType}(login: $ownerName) {
             projectV2(number: $projectNumber) {
               id
             }
@@ -46,8 +46,6 @@ export async function projectLink(): Promise<void> {
   const ownerName = github.context.payload.repository?.owner.login ?? ''
   const ownerId = github.context.payload.repository?.owner.id ?? ''
 
-  core.debug(`Repository Payload: \n ${JSON.stringify(github.context.payload.repository, null, 2)}`)
-
   if (!ownerName || !ownerId) {
     throw new Error('Could not determine repository owner')
   }
@@ -71,8 +69,8 @@ export async function projectLink(): Promise<void> {
 
   const projectName = parseProjectName({
     baseBranch,
-    prefixRemove: core.getInput('prefix-remove'),
-    sufixRemove: core.getInput('sufix-remove'),
+    prefixRemove: core.getInput('name-prefix-remove'),
+    suffixRemove: core.getInput('name-suffix-remove'),
     replaceWithSpaces: core.getInput('replace-with-spaces'),
   })
 

@@ -10,15 +10,15 @@ import {ParseProjectName, ParsedProjectUrl} from './interfaces'
  * @returns {string} The project name.
  */
 export const parseProjectName = (params: ParseProjectName): string => {
-  const {baseBranch, prefixRemove, sufixRemove, replaceWithSpaces} = params
+  const {baseBranch, prefixRemove, suffixRemove, replaceWithSpaces} = params
 
   let projectName = baseBranch
   if (prefixRemove) {
     projectName = projectName.replace(new RegExp(`^${prefixRemove}`, 'i'), '')
   }
 
-  if (sufixRemove) {
-    projectName = projectName.replace(new RegExp(`${sufixRemove}$`, 'i'), '')
+  if (suffixRemove) {
+    projectName = projectName.replace(new RegExp(`${suffixRemove}$`, 'i'), '')
   }
 
   if (replaceWithSpaces) {

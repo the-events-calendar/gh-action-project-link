@@ -70,8 +70,8 @@ describe('parseProjectName', () => {
 
   test('returns the given branch without the suffix when a suffixRemove is passed', async () => {
     const baseBranch = 'feature/work'
-    const sufixRemove = '/work'
-    const projectName = parseProjectName({baseBranch, sufixRemove})
+    const suffixRemove = '/work'
+    const projectName = parseProjectName({baseBranch, suffixRemove})
 
     expect(projectName).toEqual('feature')
   })

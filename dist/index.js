@@ -94,7 +94,7 @@ function getProjectId(params) {
         const octokit = getOctokit();
         // First, use the GraphQL API to request the template project's node ID.
         const idResp = yield octokit.graphql(`query getProject($ownerName: String!, $projectNumber: Int!) {
-          ${ownerType}(login: $ownerNamee) {
+          ${ownerType}(login: $ownerName) {
             projectV2(number: $projectNumber) {
               id
             }
@@ -117,7 +117,6 @@ function projectLink() {
         const ownerType = (0, utils_1.mustGetOwnerTypeQuery)((_a = github.context.payload.repository) === null || _a === void 0 ? void 0 : _a.owner.type);
         const ownerName = (_c = (_b = github.context.payload.repository) === null || _b === void 0 ? void 0 : _b.owner.login) !== null && _c !== void 0 ? _c : '';
         const ownerId = (_e = (_d = github.context.payload.repository) === null || _d === void 0 ? void 0 : _d.owner.id) !== null && _e !== void 0 ? _e : '';
-        core.debug(`Repository Payload: \n ${JSON.stringify(github.context.payload.repository, null, 2)}`);
         if (!ownerName || !ownerId) {
             throw new Error('Could not determine repository owner');
         }
@@ -136,8 +135,8 @@ function projectLink() {
         }
         const projectName = (0, utils_1.parseProjectName)({
             baseBranch,
-            prefixRemove: core.getInput('prefix-remove'),
-            sufixRemove: core.getInput('sufix-remove'),
+            prefixRemove: core.getInput('name-prefix-remove'),
+            suffixRemove: core.getInput('name-suffix-remove'),
             replaceWithSpaces: core.getInput('replace-with-spaces'),
         });
         const labeled = (_k = core
@@ -280,13 +279,13 @@ exports.mustGetOwnerTypeQuery = exports.parseProjectUrl = exports.parseProjectNa
  * @returns {string} The project name.
  */
 const parseProjectName = (params) => {
-    const { baseBranch, prefixRemove, sufixRemove, replaceWithSpaces } = params;
+    const { baseBranch, prefixRemove, suffixRemove, replaceWithSpaces } = params;
     let projectName = baseBranch;
     if (prefixRemove) {
         projectName = projectName.replace(new RegExp(`^${prefixRemove}`, 'i'), '');
     }
-    if (sufixRemove) {
-        projectName = projectName.replace(new RegExp(`${sufixRemove}$`, 'i'), '');
+    if (suffixRemove) {
+        projectName = projectName.replace(new RegExp(`${suffixRemove}$`, 'i'), '');
     }
     if (replaceWithSpaces) {
         for (const charToReplace of replaceWithSpaces.split('')) {
