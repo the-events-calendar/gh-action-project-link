@@ -2,73 +2,27 @@ import * as core from '@actions/core'
 import * as github from '@actions/github'
 import {minimatch} from 'minimatch'
 
+// Local imports.
+import './interfaces'
+
 const projectUrlParse = /\/(?<ownerType>orgs|users)\/(?<ownerName>[^/]+)\/projects\/(?<projectNumber>\d+)/
 
-interface ProjectNodeIDResponse {
-  organization?: {
-    projectV2: {
-      id: string
+export const parseProjectName = (baseBranch: string, prefixRemove?: string, sufixRemove?: string, replaceWithSpaces?: string): string => {
+  let projectName = baseBranch
+  if (prefixRemove) {
+    projectName = projectName.replace(new RegExp(`^${prefixRemove}`, 'i'), '')
+  }
+
+  if (sufixRemove) {
+    projectName = projectName.replace(new RegExp(`${sufixRemove}$`, 'i'), '')
+  }
+
+  if (replaceWithSpaces) {
+    for (const charToReplace of replaceWithSpaces.split('')) {
+      projectName = projectName.replace(new RegExp(charToReplace, 'g'), ' ')
     }
   }
-
-  user?: {
-    projectV2: {
-      id: string
-    }
-  }
-}
-
-interface OwnerResponse {
-  user?: {
-    id: string
-  }
-  organization?: {
-    id: string
-  }
-}
-
-interface ProjectNode {
-  node: {
-    id: string
-    title: string
-    number: number
-  }
-}
-
-interface ProjectsEdgesNodesResponse {
-  organization?: {
-    projectsV2: {
-      totalCount: number
-      edges: ProjectNode[]
-    }
-  }
-
-  user?: {
-    projectsV2: {
-      totalCount: number
-      edges: ProjectNode[]
-    }
-  }
-}
-
-interface ProjectAddItemResponse {
-  addProjectV2ItemById: {
-    item: {
-      id: string
-      project: {
-        id: string
-        url: string
-      }
-    }
-  }
-}
-
-interface ProjectCopyTemplateResponse {
-  copyProjectV2: {
-    projectV2: {
-      id: string
-    }
-  }
+  return projectName
 }
 
 export async function projectLink(): Promise<void> {
@@ -93,24 +47,12 @@ export async function projectLink(): Promise<void> {
     }
   }
 
-  let projectName = baseBranch
-  const prefixRemove = core.getInput('name-prefix-remove')
-  const sufixRemove = core.getInput('name-sufix-remove')
-  const replaceWithSpaces = core.getInput('name-replace-with-spaces')
-
-  if (prefixRemove) {
-    projectName = projectName.replace(new RegExp(`^${prefixRemove}`, 'i'), '')
-  }
-
-  if (sufixRemove) {
-    projectName = projectName.replace(new RegExp(`${sufixRemove}$`, 'i'), '')
-  }
-
-  if (replaceWithSpaces) {
-    for (const charToReplace of replaceWithSpaces.split('')) {
-      projectName = projectName.replace(new RegExp(charToReplace, 'g'), ' ')
-    }
-  }
+  const projectName = parseProjectName(
+    baseBranch,
+    core.getInput('prefix-remove'),
+    core.getInput('sufix-remove'),
+    core.getInput('replace-with-spaces')
+  )
 
   const labeled =
     core
