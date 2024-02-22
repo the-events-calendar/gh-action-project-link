@@ -5,7 +5,6 @@ import {minimatch} from 'minimatch'
 // Local imports.
 import {
   ProjectNodeIDResponse,
-  OwnerResponse,
   ProjectsEdgesNodesResponse,
   ProjectAddItemResponse,
   ProjectCopyTemplateResponse,
@@ -180,7 +179,7 @@ export async function projectLink(): Promise<void> {
           includeDraftIssues: false,
           projectId: templateProjectId,
           title: projectName,
-          ownerId: ownerId,
+          ownerId,
         },
       },
     )
