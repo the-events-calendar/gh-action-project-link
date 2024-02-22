@@ -3,32 +3,53 @@ import * as github from '@actions/github'
 import {minimatch} from 'minimatch'
 
 // Local imports.
-import './interfaces'
+import {
+  ProjectNodeIDResponse,
+  OwnerResponse,
+  ProjectsEdgesNodesResponse,
+  ProjectAddItemResponse,
+  ProjectCopyTemplateResponse,
+  ParsedProjectUrl,
+} from './interfaces'
+import {mustGetOwnerTypeQuery, parseProjectName, parseProjectUrl} from './utils'
 
-const projectUrlParse = /\/(?<ownerType>orgs|users)\/(?<ownerName>[^/]+)\/projects\/(?<projectNumber>\d+)/
+export async function getProjectId(params: ParsedProjectUrl): Promise<string | void> {
+  const {ownerName, projectNumber, ownerType} = params
+  const octokit = getOctokit()
 
-export const parseProjectName = (baseBranch: string, prefixRemove?: string, sufixRemove?: string, replaceWithSpaces?: string): string => {
-  let projectName = baseBranch
-  if (prefixRemove) {
-    projectName = projectName.replace(new RegExp(`^${prefixRemove}`, 'i'), '')
-  }
+  // First, use the GraphQL API to request the template project's node ID.
+  const idResp = await octokit.graphql<ProjectNodeIDResponse>(
+    `query getProject($ownerName: String!, $projectNumber: Int!) {
+          ${ownerType}(login: $ownerNamee) {
+            projectV2(number: $projectNumber) {
+              id
+            }
+          }
+        }`,
+    {
+      ownerName,
+      projectNumber,
+    },
+  )
 
-  if (sufixRemove) {
-    projectName = projectName.replace(new RegExp(`${sufixRemove}$`, 'i'), '')
-  }
+  const projectId = idResp[ownerType]?.projectV2.id
 
-  if (replaceWithSpaces) {
-    for (const charToReplace of replaceWithSpaces.split('')) {
-      projectName = projectName.replace(new RegExp(charToReplace, 'g'), ' ')
-    }
-  }
-  return projectName
+  core.debug(`Project node ID: ${projectId}`)
+  return projectId
 }
+
+const getOctokit = (token?: string) => github.getOctokit(token ?? core.getInput('github-token', {required: true}))
 
 export async function projectLink(): Promise<void> {
   const ghToken = core.getInput('github-token', {required: true})
-  const projectOwner = core.getInput('project-owner', {required: true})
-  const ownerType = mustGetOwnerTypeQuery(core.getInput('owner-type', {required: true}))
+
+  const ownerType = mustGetOwnerTypeQuery(github.context.payload.repository?.owner.type)
+  const ownerName = github.context.payload.repository?.owner.name ?? ''
+  const ownerId = github.context.payload.repository?.owner.id ?? ''
+
+  if (!ownerName || !ownerId) {
+    throw new Error('Could not determine repository owner')
+  }
 
   const baseBranchPattern = core.getInput('base-branch-pattern') ?? '*'
 
@@ -47,12 +68,12 @@ export async function projectLink(): Promise<void> {
     }
   }
 
-  const projectName = parseProjectName(
+  const projectName = parseProjectName({
     baseBranch,
-    core.getInput('prefix-remove'),
-    core.getInput('sufix-remove'),
-    core.getInput('replace-with-spaces')
-  )
+    prefixRemove: core.getInput('prefix-remove'),
+    sufixRemove: core.getInput('sufix-remove'),
+    replaceWithSpaces: core.getInput('replace-with-spaces'),
+  })
 
   const labeled =
     core
@@ -62,9 +83,8 @@ export async function projectLink(): Promise<void> {
       .filter(l => l.length > 0) ?? []
   const labelOperator = core.getInput('label-operator').trim().toLocaleLowerCase()
   const issueLabels: string[] = (issue?.labels ?? []).map((l: {name: string}) => l.name.toLowerCase())
-  const issueOwnerName = github.context.payload.repository?.owner.login
 
-  core.debug(`Issue/PR owner: ${issueOwnerName}`)
+  core.debug(`Issue/PR owner: ${ownerName}`)
   core.debug(`Issue/PR labels: ${issueLabels.join(', ')}`)
 
   // Ensure the issue matches our `labeled` filter based on the label-operator.
@@ -85,49 +105,26 @@ export async function projectLink(): Promise<void> {
     }
   }
 
-  const projectTemplateUrl = core.getInput('template-project-url')
-  let templateProjectOwnerName
-  let templateProjectId
-  if (projectTemplateUrl) {
-    core.debug(`Project URL: ${projectTemplateUrl}`)
+  let projectNumber = parseInt(core.getInput('template-project-number') ?? 0, 10)
 
-    const urlMatch = projectTemplateUrl.match(projectUrlParse)
+  if (!projectNumber) {
+    const templateProjectUrl = core.getInput('template-project-url')
+    const parsedProject = parseProjectUrl(templateProjectUrl)
+    projectNumber = parsedProject?.projectNumber
 
-    if (!urlMatch) {
-      throw new Error(
-        `Invalid project URL: ${projectTemplateUrl}. Project URL should match the format <GitHub server domain name>/<orgs-or-users>/<ownerName>/projects/<projectNumber>`,
-      )
-    }
+    core.debug(`Template Project URL: ${templateProjectUrl}`)
+  }
+  core.debug(`Project owner: ${ownerName}`)
+  core.debug(`Project number: ${projectNumber}`)
+  core.debug(`Project owner type: ${ownerType}`)
 
-    templateProjectOwnerName = urlMatch.groups?.ownerName
-    const templateProjectNumber = parseInt(urlMatch.groups?.projectNumber ?? '', 10)
-    const templateProjectOwnerType = urlMatch.groups?.ownerType
-    const templateProjectOwnerTypeQuery = mustGetOwnerTypeQuery(templateProjectOwnerType)
+  const templateProjectId = await getProjectId({ownerType, ownerName, projectNumber}).catch(err => {
+    core.debug(`Error: ${err.message}`)
+    return null
+  })
 
-    core.debug(`Project Template owner: ${templateProjectOwnerName}`)
-    core.debug(`Project Template number: ${templateProjectNumber}`)
-    core.debug(`Project Template owner type: ${templateProjectOwnerType}`)
-
-    // First, use the GraphQL API to request the template project's node ID.
-    const idResp = await octokit.graphql<ProjectNodeIDResponse>(
-      `query getProject($templateProjectOwnerName: String!, $templateProjectNumber: Int!) {
-          ${templateProjectOwnerTypeQuery}(login: $templateProjectOwnerName) {
-            projectV2(number: $templateProjectNumber) {
-              id
-            }
-          }
-        }`,
-      {
-        templateProjectOwnerName,
-        templateProjectNumber,
-      },
-    )
-
-    templateProjectId = idResp[templateProjectOwnerTypeQuery]?.projectV2.id
-
-    core.debug(`Project node ID: ${templateProjectId}`)
-  } else {
-    core.info(`No template project URL provided. Will create a project without a template.`)
+  if (!templateProjectId) {
+    core.info(`No template project URL provided or invalid. Will create a project without a template.`)
   }
 
   const contentId = issue?.node_id
@@ -135,7 +132,7 @@ export async function projectLink(): Promise<void> {
 
   const queryString = projectName
   const getProjectsQuery = `query {
-    ${ownerType}(login:"${issueOwnerName}") {
+    ${ownerType}(login:"${ownerName}") {
       projectsV2(first:100 query:"${queryString}") {
         totalCount
         edges {
@@ -162,7 +159,7 @@ export async function projectLink(): Promise<void> {
     const project = foundNodes?.edges[0]?.node
 
     if (!project) {
-      core.info(`No projects found for ${issueOwnerName} with query ${queryString}`)
+      core.info(`No projects found for ${ownerName} with query ${queryString}`)
       return
     }
 
@@ -170,24 +167,6 @@ export async function projectLink(): Promise<void> {
 
     core.info(`Found project: ${project.title} (Number: ${project.number})(ID: ${project.id})`)
   } else {
-    const getOwnerQuery = `query {
-      ${ownerType}(login:"${templateProjectOwnerName}") {
-        id
-      }
-    }`
-    core.debug(`Project Owner Query: \n ${getOwnerQuery}`)
-
-    // First, use the GraphQL API to request the template project's node ID.
-    const ownerResp = await octokit.graphql<OwnerResponse>(getOwnerQuery)
-
-    core.debug(`Owner Response: \n ${JSON.stringify(ownerResp, null, 2)}`)
-
-    if (!ownerResp[ownerType]?.id) {
-      throw new Error(`No owner found for ${projectOwner}`)
-    }
-
-    const projectOwnerID = ownerResp[ownerType]?.id
-
     const copyProjectTemplateResp = await octokit.graphql<ProjectCopyTemplateResponse>(
       `mutation createProjectFromTemplate($input: CopyProjectV2Input!) {
         copyProjectV2(input: $input) {
@@ -201,7 +180,7 @@ export async function projectLink(): Promise<void> {
           includeDraftIssues: false,
           projectId: templateProjectId,
           title: projectName,
-          ownerId: projectOwnerID,
+          ownerId: ownerId,
         },
       },
     )
@@ -238,23 +217,4 @@ export async function projectLink(): Promise<void> {
   core.info(`Pull Request: ${issue?.html_url}`)
   core.info(`Project: ${addResp.addProjectV2ItemById.item.project.url}`)
   core.setOutput('itemId', addResp.addProjectV2ItemById.item.id)
-}
-
-export function mustGetOwnerTypeQuery(ownerType?: string): 'organization' | 'user' {
-  const defaultOwnerType = 'organization'
-  const validOrganizationTypes = ['orgs', 'organization', 'org', 'organizations']
-  const validUserTypes = ['users', 'user']
-  if (!ownerType) {
-    return defaultOwnerType
-  }
-
-  if (validOrganizationTypes.includes(ownerType)) {
-    return 'organization'
-  } else if (validUserTypes.includes(ownerType)) {
-    return 'user'
-  }
-
-  throw new Error(
-    `Unsupported ownerType: ${ownerType}. Must be one of 'orgs', 'organization', 'org', 'organizations' or 'users', 'user'`,
-  )
 }

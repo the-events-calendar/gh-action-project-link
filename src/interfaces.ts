@@ -1,5 +1,17 @@
+export interface ParseProjectName {
+  baseBranch: string
+  prefixRemove?: string
+  sufixRemove?: string
+  replaceWithSpaces?: string
+}
 
-interface ProjectNodeIDResponse {
+export interface ParsedProjectUrl {
+  ownerType: 'organization' | 'user'
+  ownerName: string
+  projectNumber: number
+}
+
+export interface ProjectNodeIDResponse {
   organization?: {
     projectV2: {
       id: string
@@ -13,7 +25,7 @@ interface ProjectNodeIDResponse {
   }
 }
 
-interface OwnerResponse {
+export interface OwnerResponse {
   user?: {
     id: string
   }
@@ -22,7 +34,7 @@ interface OwnerResponse {
   }
 }
 
-interface ProjectNode {
+export interface ProjectNode {
   node: {
     id: string
     title: string
@@ -30,7 +42,7 @@ interface ProjectNode {
   }
 }
 
-interface ProjectsEdgesNodesResponse {
+export interface ProjectsEdgesNodesResponse {
   organization?: {
     projectsV2: {
       totalCount: number
@@ -46,7 +58,7 @@ interface ProjectsEdgesNodesResponse {
   }
 }
 
-interface ProjectAddItemResponse {
+export interface ProjectAddItemResponse {
   addProjectV2ItemById: {
     item: {
       id: string
@@ -58,7 +70,7 @@ interface ProjectAddItemResponse {
   }
 }
 
-interface ProjectCopyTemplateResponse {
+export interface ProjectCopyTemplateResponse {
   copyProjectV2: {
     projectV2: {
       id: string

@@ -1,7 +1,7 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 
-import {projectLink, mustGetOwnerTypeQuery} from '../src/project-link'
+import {projectLink} from '../src/project-link'
 
 describe('projectLink', () => {
   let outputs: Record<string, string>
@@ -996,47 +996,6 @@ describe('projectLink', () => {
     expect(outputs.itemId).toEqual('project-next-item-id')
   })
 })
-
-describe('mustGetOwnerTypeQuery', () => {
-  test('returns organization for orgs ownerType', async () => {
-    const ownerTypeQuery = mustGetOwnerTypeQuery('orgs')
-
-    expect(ownerTypeQuery).toEqual('organization')
-  })
-
-  test('returns organization for empty ownerType', async () => {
-    const ownerTypeQuery = mustGetOwnerTypeQuery()
-
-    expect(ownerTypeQuery).toEqual('organization')
-  })
-
-  test('returns organization for org ownerType', async () => {
-    const ownerTypeQuery = mustGetOwnerTypeQuery('org')
-
-    expect(ownerTypeQuery).toEqual('organization')
-  })
-
-  test('returns organization for organizations ownerType', async () => {
-    const ownerTypeQuery = mustGetOwnerTypeQuery('organizations')
-
-    expect(ownerTypeQuery).toEqual('organization')
-  })
-
-  test('returns user for users ownerType', async () => {
-    const ownerTypeQuery = mustGetOwnerTypeQuery('users')
-
-    expect(ownerTypeQuery).toEqual('user')
-  })
-
-  test('throws an error when an unsupported ownerType is set', async () => {
-    expect(() => {
-      mustGetOwnerTypeQuery('unknown')
-    }).toThrow(
-      `Unsupported ownerType: unknown. Must be one of 'orgs', 'organization', 'org', 'organizations' or 'users', 'user'`,
-    )
-  })
-})
-
 function mockGetInput(mocks: Record<string, string>): jest.SpyInstance {
   const mock = (key: string) => mocks[key] ?? ''
   return jest.spyOn(core, 'getInput').mockImplementation(mock)
