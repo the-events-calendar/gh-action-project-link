@@ -29,6 +29,9 @@ inputs:
   template-project-url:
     required: false
     description: Which template to use to create the project. If not provided, the default project template will be used.
+  template-project-number:
+    required: false
+    description: The number of the project to use as a template.
   labeled:
     required: false
     description: A comma-separated list of labels to use as a filter for issue to be added
