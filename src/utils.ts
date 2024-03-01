@@ -1,4 +1,24 @@
 import {ParseProjectName, ParsedProjectUrl} from './interfaces'
+import * as core from '@actions/core'
+import * as github from '@actions/github'
+
+/**
+ * Given a GitHub token, return an Octokit instance.
+ *
+ * @since 1.0.0
+ *
+ * @param {string} token The GitHub token. (optional)
+ */
+export const getOctokit = (token?: string) => {
+  return github.getOctokit(token ?? core.getInput('github-token', {required: true}))
+}
+
+export interface ParseProjectName {
+  baseBranch: string
+  prefixRemove?: string
+  suffixRemove?: string
+  replaceWithSpaces?: string
+}
 
 /**
  * Given a base branch value, do some string manipulation to get a project name.
@@ -28,6 +48,12 @@ export const parseProjectName = (params: ParseProjectName): string => {
   }
 
   return projectName
+}
+
+export interface ParsedProjectUrl {
+  ownerType: 'organization' | 'user'
+  ownerName: string
+  projectNumber: number
 }
 
 export const parseProjectUrl = (url: string): ParsedProjectUrl => {
