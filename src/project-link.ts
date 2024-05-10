@@ -10,14 +10,11 @@ import {mustGetOwnerTypeQuery, parseProjectName, parseProjectUrl} from './utils'
 export async function projectLink(): Promise<void> {
   const ownerType = mustGetOwnerTypeQuery(github.context.payload.repository?.owner.type)
   const ownerName = github.context.payload.repository?.owner.login ?? ''
-  const ownerId = github.context.payload.repository?.owner.id ?? ''
-  const owner = github.context.payload.repository?.owner
+  const ownerId = github.context.payload.repository?.owner.node_id ?? ''
 
-  if (!ownerName || !ownerId || !owner) {
+  if (!ownerName || !ownerId) {
     throw new Error('Could not determine repository owner')
   }
-
-  core.debug(`Owner Object: \n ${JSON.stringify(owner, null, 2)}`)
 
   const baseBranchPattern = core.getInput('base-branch-pattern') ?? '*'
 
@@ -83,7 +80,7 @@ export async function projectLink(): Promise<void> {
     }
     core.debug(`Template Project ID: ${templateProjectId}`)
 
-    projectId = await copyProjectTemplate({projectId: templateProjectId, title: projectName, ownerId: owner.node_id})
+    projectId = await copyProjectTemplate({projectId: templateProjectId, title: projectName, ownerId})
   }
 
   const addResp = await addIssueToProject({projectId, contentId, issueNumber: issue?.number})
