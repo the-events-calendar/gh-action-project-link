@@ -11,10 +11,13 @@ export async function projectLink(): Promise<void> {
   const ownerType = mustGetOwnerTypeQuery(github.context.payload.repository?.owner.type)
   const ownerName = github.context.payload.repository?.owner.login ?? ''
   const ownerId = github.context.payload.repository?.owner.id ?? ''
+  const owner = github.context.payload.repository?.owner
 
   if (!ownerName || !ownerId) {
     throw new Error('Could not determine repository owner')
   }
+
+  core.debug(`Owner Object: \n ${JSON.stringify(owner, null, 2)}`)
 
   const baseBranchPattern = core.getInput('base-branch-pattern') ?? '*'
 

@@ -169,16 +169,18 @@ const labels_1 = __nccwpck_require__(2475);
 const utils_1 = __nccwpck_require__(918);
 function projectLink() {
     return __awaiter(this, void 0, void 0, function* () {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
         const ownerType = (0, utils_1.mustGetOwnerTypeQuery)((_a = github.context.payload.repository) === null || _a === void 0 ? void 0 : _a.owner.type);
         const ownerName = (_c = (_b = github.context.payload.repository) === null || _b === void 0 ? void 0 : _b.owner.login) !== null && _c !== void 0 ? _c : '';
         const ownerId = (_e = (_d = github.context.payload.repository) === null || _d === void 0 ? void 0 : _d.owner.id) !== null && _e !== void 0 ? _e : '';
+        const owner = (_f = github.context.payload.repository) === null || _f === void 0 ? void 0 : _f.owner;
         if (!ownerName || !ownerId) {
             throw new Error('Could not determine repository owner');
         }
-        const baseBranchPattern = (_f = core.getInput('base-branch-pattern')) !== null && _f !== void 0 ? _f : '*';
-        const issue = (_g = github.context.payload.issue) !== null && _g !== void 0 ? _g : github.context.payload.pull_request;
-        const baseBranch = (_j = (_h = issue === null || issue === void 0 ? void 0 : issue.base) === null || _h === void 0 ? void 0 : _h.ref) !== null && _j !== void 0 ? _j : 'main';
+        core.debug(`Owner Object: \n ${JSON.stringify(owner, null, 2)}`);
+        const baseBranchPattern = (_g = core.getInput('base-branch-pattern')) !== null && _g !== void 0 ? _g : '*';
+        const issue = (_h = github.context.payload.issue) !== null && _h !== void 0 ? _h : github.context.payload.pull_request;
+        const baseBranch = (_k = (_j = issue === null || issue === void 0 ? void 0 : issue.base) === null || _j === void 0 ? void 0 : _j.ref) !== null && _k !== void 0 ? _k : 'main';
         if (!issue) {
             throw new Error('No issue or pull request found in payload');
         }
@@ -208,7 +210,7 @@ function projectLink() {
         let projectId = yield (0, queries_1.getFirstProjectFromSearch)({ search: projectName, ownerType, ownerName });
         core.debug(`Project ID: ${projectId}`);
         if (!projectId) {
-            let projectNumber = parseInt((_k = core.getInput('template-project-number')) !== null && _k !== void 0 ? _k : 0, 10);
+            let projectNumber = parseInt((_l = core.getInput('template-project-number')) !== null && _l !== void 0 ? _l : 0, 10);
             if (!projectNumber) {
                 const templateProjectUrl = core.getInput('template-project-url');
                 const parsedProject = (0, utils_1.parseProjectUrl)(templateProjectUrl);
