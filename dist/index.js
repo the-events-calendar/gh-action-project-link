@@ -1,6 +1,84 @@
 require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
+/***/ 2475:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.matchLabelConditions = void 0;
+const core = __importStar(__nccwpck_require__(2186));
+const matchLabelConditions = (issue) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b;
+    const labeled = (_a = core
+        .getInput('labeled')
+        .split(',')
+        .map(l => l.trim().toLowerCase())
+        .filter(l => l.length > 0)) !== null && _a !== void 0 ? _a : [];
+    const labelOperator = core.getInput('label-operator').trim().toLocaleLowerCase();
+    const issueLabels = ((_b = issue === null || issue === void 0 ? void 0 : issue.labels) !== null && _b !== void 0 ? _b : []).map((l) => l.name.toLowerCase());
+    core.debug(`Existing labels: ${issueLabels.join(', ')}`);
+    core.debug(`Label Conditions: ${labeled.join(', ')}`);
+    core.debug(`Label Operator: ${labelOperator}`);
+    // Ensure the issue matches our `labeled` filter based on the label-operator.
+    if (labelOperator === 'and') {
+        if (!labeled.every(l => issueLabels.includes(l))) {
+            core.info(`Skipping issue ${issue === null || issue === void 0 ? void 0 : issue.number} because it doesn't match all the labels: ${labeled.join(', ')}`);
+            return false;
+        }
+    }
+    else if (labelOperator === 'not') {
+        if (labeled.length > 0 && issueLabels.some(l => labeled.includes(l))) {
+            core.info(`Skipping issue ${issue === null || issue === void 0 ? void 0 : issue.number} because it contains one of the labels: ${labeled.join(', ')}`);
+            return false;
+        }
+    }
+    else {
+        if (labeled.length > 0 && !issueLabels.some(l => labeled.includes(l))) {
+            core.info(`Skipping issue ${issue === null || issue === void 0 ? void 0 : issue.number} because it does not have one of the labels: ${labeled.join(', ')}`);
+            return false;
+        }
+    }
+    return true;
+});
+exports.matchLabelConditions = matchLabelConditions;
+
+
+/***/ }),
+
 /***/ 3109:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -82,16 +160,265 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.projectLink = exports.getProjectId = void 0;
+exports.projectLink = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
 const minimatch_1 = __nccwpck_require__(1953);
+const queries_1 = __nccwpck_require__(3953);
+const labels_1 = __nccwpck_require__(2475);
+const utils_1 = __nccwpck_require__(918);
+function projectLink() {
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
+    return __awaiter(this, void 0, void 0, function* () {
+        const ownerType = (0, utils_1.mustGetOwnerTypeQuery)((_a = github.context.payload.repository) === null || _a === void 0 ? void 0 : _a.owner.type);
+        const ownerName = (_c = (_b = github.context.payload.repository) === null || _b === void 0 ? void 0 : _b.owner.login) !== null && _c !== void 0 ? _c : '';
+        const ownerId = (_e = (_d = github.context.payload.repository) === null || _d === void 0 ? void 0 : _d.owner.id) !== null && _e !== void 0 ? _e : '';
+        if (!ownerName || !ownerId) {
+            throw new Error('Could not determine repository owner');
+        }
+        const baseBranchPattern = (_f = core.getInput('base-branch-pattern')) !== null && _f !== void 0 ? _f : '*';
+        const issue = (_g = github.context.payload.issue) !== null && _g !== void 0 ? _g : github.context.payload.pull_request;
+        const baseBranch = (_j = (_h = issue === null || issue === void 0 ? void 0 : issue.base) === null || _h === void 0 ? void 0 : _h.ref) !== null && _j !== void 0 ? _j : 'main';
+        if (!issue) {
+            throw new Error('No issue or pull request found in payload');
+        }
+        if (!baseBranch) {
+            throw new Error('This action can only be run on pull_request events');
+        }
+        if (baseBranchPattern && !(0, minimatch_1.minimatch)(baseBranch, baseBranchPattern)) {
+            core.info(`Skipping issue because base branch ${baseBranch} does not match pattern ${baseBranchPattern}`);
+            return;
+        }
+        const contentId = issue === null || issue === void 0 ? void 0 : issue.node_id;
+        if (!contentId) {
+            throw new Error('Could not determine issue or pull request ID');
+        }
+        core.debug(`Pull Request ID: ${contentId}`);
+        core.debug(`Project owner: ${ownerName}`);
+        core.debug(`Project owner type: ${ownerType}`);
+        const projectName = (0, utils_1.parseProjectName)({
+            baseBranch,
+            prefixRemove: core.getInput('name-prefix-remove'),
+            suffixRemove: core.getInput('name-suffix-remove'),
+            replaceWithSpaces: core.getInput('replace-with-spaces'),
+        });
+        if (!(0, labels_1.matchLabelConditions)({ labels: issue === null || issue === void 0 ? void 0 : issue.labels, number: issue === null || issue === void 0 ? void 0 : issue.number })) {
+            throw new Error('Issue does not match label conditions');
+        }
+        let projectId = yield (0, queries_1.getFirstProjectFromSearch)({ search: projectName, ownerType, ownerName });
+        if (!projectId) {
+            let projectNumber = parseInt((_k = core.getInput('template-project-number')) !== null && _k !== void 0 ? _k : 0, 10);
+            if (!projectNumber) {
+                const templateProjectUrl = core.getInput('template-project-url');
+                const parsedProject = (0, utils_1.parseProjectUrl)(templateProjectUrl);
+                projectNumber = parsedProject === null || parsedProject === void 0 ? void 0 : parsedProject.projectNumber;
+                core.debug(`Template Project URL: ${templateProjectUrl}`);
+            }
+            core.debug(`Project number: ${projectNumber}`);
+            const templateProjectId = yield (0, queries_1.getProjectId)({ ownerType, ownerName, projectNumber }).catch(err => {
+                core.debug(`Error: ${err.message}`);
+                return undefined;
+            });
+            if (!templateProjectId) {
+                core.info(`No template project URL provided or invalid. Will create a project without a template.`);
+            }
+            projectId = yield (0, queries_1.copyProjectTemplate)({ projectId: templateProjectId, title: projectName, ownerId });
+        }
+        const addResp = yield (0, queries_1.addIssueToProject)({ projectId, contentId, issueNumber: issue === null || issue === void 0 ? void 0 : issue.number });
+        core.info(`Pull Request: ${issue === null || issue === void 0 ? void 0 : issue.html_url}`);
+        core.info(`Project: ${addResp.url}`);
+        core.setOutput('itemId', addResp.id);
+    });
+}
+exports.projectLink = projectLink;
+
+
+/***/ }),
+
+/***/ 2583:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.addIssueToProject = void 0;
+const core = __importStar(__nccwpck_require__(2186));
+const utils_1 = __nccwpck_require__(918);
+const addIssueToProject = (params) => __awaiter(void 0, void 0, void 0, function* () {
+    const octokit = (0, utils_1.getOctokit)();
+    const { projectId, contentId, issueNumber } = params;
+    core.info(`Adding PR ${issueNumber} to project ${projectId}`);
+    const addResp = yield octokit.graphql(`mutation addIssueToProject($input: AddProjectV2ItemByIdInput!) {
+      addProjectV2ItemById(input: $input) {
+        item {
+          id
+          project {
+            url
+            title
+          }
+        }
+      }
+    }`, {
+        input: {
+            projectId,
+            contentId,
+        },
+    });
+    core.debug(`Add to Project Response: \n ${JSON.stringify(addResp, null, 2)}`);
+    return {
+        url: addResp.addProjectV2ItemById.item.project.url,
+        id: addResp.addProjectV2ItemById.item.id,
+    };
+});
+exports.addIssueToProject = addIssueToProject;
+
+
+/***/ }),
+
+/***/ 9921:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.copyProjectTemplate = void 0;
+const core = __importStar(__nccwpck_require__(2186));
+const utils_1 = __nccwpck_require__(918);
+const copyProjectTemplate = (params) => __awaiter(void 0, void 0, void 0, function* () {
+    const octokit = (0, utils_1.getOctokit)();
+    const { projectId, title, ownerId } = params;
+    const copyProjectTemplateResp = yield octokit.graphql(`mutation createProjectFromTemplate($input: CopyProjectV2Input!) {
+    copyProjectV2(input: $input) {
+      projectV2 {
+        id
+      }
+    }
+  }`, {
+        input: {
+            includeDraftIssues: false,
+            projectId,
+            title,
+            ownerId,
+        },
+    });
+    core.debug(`Copy Project Template Response: \n ${JSON.stringify(copyProjectTemplateResp, null, 2)}`);
+    return copyProjectTemplateResp.copyProjectV2.projectV2.id;
+});
+exports.copyProjectTemplate = copyProjectTemplate;
+
+
+/***/ }),
+
+/***/ 8801:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getProjectId = void 0;
+const core = __importStar(__nccwpck_require__(2186));
 const utils_1 = __nccwpck_require__(918);
 function getProjectId(params) {
     var _a;
     return __awaiter(this, void 0, void 0, function* () {
         const { ownerName, projectNumber, ownerType } = params;
-        const octokit = getOctokit();
+        const octokit = (0, utils_1.getOctokit)();
         // First, use the GraphQL API to request the template project's node ID.
         const idResp = yield octokit.graphql(`query getProject($ownerName: String!, $projectNumber: Int!) {
           ${ownerType}(login: $ownerName) {
@@ -105,91 +432,65 @@ function getProjectId(params) {
         });
         const projectId = (_a = idResp[ownerType]) === null || _a === void 0 ? void 0 : _a.projectV2.id;
         core.debug(`Project node ID: ${projectId}`);
+        if (!projectId) {
+            throw new Error(`Project not found for ${ownerName}/${projectNumber}`);
+        }
         return projectId;
     });
 }
 exports.getProjectId = getProjectId;
-const getOctokit = (token) => github.getOctokit(token !== null && token !== void 0 ? token : core.getInput('github-token', { required: true }));
-function projectLink() {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p;
-    return __awaiter(this, void 0, void 0, function* () {
-        const ghToken = core.getInput('github-token', { required: true });
-        const ownerType = (0, utils_1.mustGetOwnerTypeQuery)((_a = github.context.payload.repository) === null || _a === void 0 ? void 0 : _a.owner.type);
-        const ownerName = (_c = (_b = github.context.payload.repository) === null || _b === void 0 ? void 0 : _b.owner.login) !== null && _c !== void 0 ? _c : '';
-        const ownerId = (_e = (_d = github.context.payload.repository) === null || _d === void 0 ? void 0 : _d.owner.id) !== null && _e !== void 0 ? _e : '';
-        if (!ownerName || !ownerId) {
-            throw new Error('Could not determine repository owner');
-        }
-        const baseBranchPattern = (_f = core.getInput('base-branch-pattern')) !== null && _f !== void 0 ? _f : '*';
-        const octokit = github.getOctokit(ghToken);
-        const issue = (_g = github.context.payload.issue) !== null && _g !== void 0 ? _g : github.context.payload.pull_request;
-        const baseBranch = (_j = (_h = issue === null || issue === void 0 ? void 0 : issue.base) === null || _h === void 0 ? void 0 : _h.ref) !== null && _j !== void 0 ? _j : 'main';
-        if (!baseBranch) {
-            throw new Error('This action can only be run on pull_request events');
-        }
-        if (baseBranchPattern) {
-            if (!(0, minimatch_1.minimatch)(baseBranch, baseBranchPattern)) {
-                core.info(`Skipping issue because base branch ${baseBranch} does not match pattern ${baseBranchPattern}`);
-                return;
-            }
-        }
-        const projectName = (0, utils_1.parseProjectName)({
-            baseBranch,
-            prefixRemove: core.getInput('name-prefix-remove'),
-            suffixRemove: core.getInput('name-suffix-remove'),
-            replaceWithSpaces: core.getInput('replace-with-spaces'),
-        });
-        const labeled = (_k = core
-            .getInput('labeled')
-            .split(',')
-            .map(l => l.trim().toLowerCase())
-            .filter(l => l.length > 0)) !== null && _k !== void 0 ? _k : [];
-        const labelOperator = core.getInput('label-operator').trim().toLocaleLowerCase();
-        const issueLabels = ((_l = issue === null || issue === void 0 ? void 0 : issue.labels) !== null && _l !== void 0 ? _l : []).map((l) => l.name.toLowerCase());
-        core.debug(`Issue/PR owner: ${ownerName}`);
-        core.debug(`Issue/PR labels: ${issueLabels.join(', ')}`);
-        // Ensure the issue matches our `labeled` filter based on the label-operator.
-        if (labelOperator === 'and') {
-            if (!labeled.every(l => issueLabels.includes(l))) {
-                core.info(`Skipping issue ${issue === null || issue === void 0 ? void 0 : issue.number} because it doesn't match all the labels: ${labeled.join(', ')}`);
-                return;
-            }
-        }
-        else if (labelOperator === 'not') {
-            if (labeled.length > 0 && issueLabels.some(l => labeled.includes(l))) {
-                core.info(`Skipping issue ${issue === null || issue === void 0 ? void 0 : issue.number} because it contains one of the labels: ${labeled.join(', ')}`);
-                return;
-            }
-        }
-        else {
-            if (labeled.length > 0 && !issueLabels.some(l => labeled.includes(l))) {
-                core.info(`Skipping issue ${issue === null || issue === void 0 ? void 0 : issue.number} because it does not have one of the labels: ${labeled.join(', ')}`);
-                return;
-            }
-        }
-        let projectNumber = parseInt((_m = core.getInput('template-project-number')) !== null && _m !== void 0 ? _m : 0, 10);
-        if (!projectNumber) {
-            const templateProjectUrl = core.getInput('template-project-url');
-            const parsedProject = (0, utils_1.parseProjectUrl)(templateProjectUrl);
-            projectNumber = parsedProject === null || parsedProject === void 0 ? void 0 : parsedProject.projectNumber;
-            core.debug(`Template Project URL: ${templateProjectUrl}`);
-        }
-        core.debug(`Project owner: ${ownerName}`);
-        core.debug(`Project number: ${projectNumber}`);
-        core.debug(`Project owner type: ${ownerType}`);
-        const templateProjectId = yield getProjectId({ ownerType, ownerName, projectNumber }).catch(err => {
-            core.debug(`Error: ${err.message}`);
-            return null;
-        });
-        if (!templateProjectId) {
-            core.info(`No template project URL provided or invalid. Will create a project without a template.`);
-        }
-        const contentId = issue === null || issue === void 0 ? void 0 : issue.node_id;
-        core.debug(`Content ID: ${contentId}`);
-        const queryString = projectName;
-        const getProjectsQuery = `query {
+
+
+/***/ }),
+
+/***/ 6564:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getFirstProjectFromSearch = void 0;
+const core = __importStar(__nccwpck_require__(2186));
+const utils_1 = __nccwpck_require__(918);
+const getFirstProjectFromSearch = (params) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b;
+    const octokit = (0, utils_1.getOctokit)();
+    const { search, ownerType, ownerName } = params;
+    const getProjectsQuery = `query {
     ${ownerType}(login:"${ownerName}") {
-      projectsV2(first:100 query:"${queryString}") {
+      projectsV2(first:100 query:"${search}") {
         totalCount
         edges {
           node {
@@ -201,74 +502,90 @@ function projectLink() {
       }
     }
   }`;
-        core.debug(`Projects Query: \n ${getProjectsQuery}`);
-        // First, use the GraphQL API to request the template project's node ID.
-        const searchResp = yield octokit.graphql(getProjectsQuery);
-        core.debug(`Search Response: \n ${JSON.stringify(searchResp, null, 2)}`);
-        const foundNodes = (_o = searchResp[ownerType]) === null || _o === void 0 ? void 0 : _o.projectsV2;
-        let projectId;
-        if ((foundNodes === null || foundNodes === void 0 ? void 0 : foundNodes.totalCount) !== 0) {
-            const project = (_p = foundNodes === null || foundNodes === void 0 ? void 0 : foundNodes.edges[0]) === null || _p === void 0 ? void 0 : _p.node;
-            if (!project) {
-                core.info(`No projects found for ${ownerName} with query ${queryString}`);
-                return;
-            }
-            projectId = project.id;
-            core.info(`Found project: ${project.title} (Number: ${project.number})(ID: ${project.id})`);
-        }
-        else {
-            const copyProjectTemplateResp = yield octokit.graphql(`mutation createProjectFromTemplate($input: CopyProjectV2Input!) {
-        copyProjectV2(input: $input) {
-          projectV2 {
-            id
-          }
-        }
-      }`, {
-                input: {
-                    includeDraftIssues: false,
-                    projectId: templateProjectId,
-                    title: projectName,
-                    ownerId,
-                },
-            });
-            core.debug(`Copy Project Template Response: \n ${JSON.stringify(copyProjectTemplateResp, null, 2)}`);
-            projectId = copyProjectTemplateResp.copyProjectV2.projectV2.id;
-        }
-        core.info(`Adding PR ${issue === null || issue === void 0 ? void 0 : issue.number} to project ${projectId}`);
-        const addResp = yield octokit.graphql(`mutation addIssueToProject($input: AddProjectV2ItemByIdInput!) {
-      addProjectV2ItemById(input: $input) {
-        item {
-          id
-          project {
-            url
-            title
-          }
-        }
-      }
-    }`, {
-            input: {
-                projectId,
-                contentId,
-            },
-        });
-        core.debug(`Add to Project Response: \n ${JSON.stringify(addResp, null, 2)}`);
-        core.info(`Pull Request: ${issue === null || issue === void 0 ? void 0 : issue.html_url}`);
-        core.info(`Project: ${addResp.addProjectV2ItemById.item.project.url}`);
-        core.setOutput('itemId', addResp.addProjectV2ItemById.item.id);
-    });
-}
-exports.projectLink = projectLink;
+    core.debug(`Projects Query: \n ${getProjectsQuery}`);
+    // First, use the GraphQL API to request the template project's node ID.
+    const searchResp = yield octokit.graphql(getProjectsQuery);
+    core.debug(`Search Response: \n ${JSON.stringify(searchResp, null, 2)}`);
+    const foundNodes = (_a = searchResp[ownerType]) === null || _a === void 0 ? void 0 : _a.projectsV2;
+    if (!foundNodes || foundNodes.totalCount === 0 || !foundNodes.edges.length) {
+        core.info(`No projects found for ${ownerName} with query ${search}`);
+        return;
+    }
+    const project = (_b = foundNodes.edges[0]) === null || _b === void 0 ? void 0 : _b.node;
+    if (!project) {
+        core.info(`No projects found for ${ownerName} with query ${search}`);
+        return;
+    }
+    core.info(`Found project: ${project.title} (Number: ${project.number})(ID: ${project.id})`);
+    return project.id;
+});
+exports.getFirstProjectFromSearch = getFirstProjectFromSearch;
+
+
+/***/ }),
+
+/***/ 3953:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getFirstProjectFromSearch = exports.copyProjectTemplate = exports.addIssueToProject = exports.getProjectId = void 0;
+const get_project_id_1 = __nccwpck_require__(8801);
+Object.defineProperty(exports, "getProjectId", ({ enumerable: true, get: function () { return get_project_id_1.getProjectId; } }));
+const add_issue_to_project_1 = __nccwpck_require__(2583);
+Object.defineProperty(exports, "addIssueToProject", ({ enumerable: true, get: function () { return add_issue_to_project_1.addIssueToProject; } }));
+const copy_project_template_1 = __nccwpck_require__(9921);
+Object.defineProperty(exports, "copyProjectTemplate", ({ enumerable: true, get: function () { return copy_project_template_1.copyProjectTemplate; } }));
+const get_projects_1 = __nccwpck_require__(6564);
+Object.defineProperty(exports, "getFirstProjectFromSearch", ({ enumerable: true, get: function () { return get_projects_1.getFirstProjectFromSearch; } }));
 
 
 /***/ }),
 
 /***/ 918:
-/***/ ((__unused_webpack_module, exports) => {
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.mustGetOwnerTypeQuery = exports.parseProjectUrl = exports.parseProjectName = void 0;
+exports.mustGetOwnerTypeQuery = exports.parseProjectUrl = exports.parseProjectName = exports.getOctokit = void 0;
+const core = __importStar(__nccwpck_require__(2186));
+const github = __importStar(__nccwpck_require__(5438));
+/**
+ * Given a GitHub token, return an Octokit instance.
+ *
+ * @since 1.0.0
+ *
+ * @param {string} token The GitHub token. (optional)
+ */
+const getOctokit = (token) => {
+    return github.getOctokit(token !== null && token !== void 0 ? token : core.getInput('github-token', { required: true }));
+};
+exports.getOctokit = getOctokit;
 /**
  * Given a base branch value, do some string manipulation to get a project name.
  *

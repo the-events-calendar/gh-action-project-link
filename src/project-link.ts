@@ -3,6 +3,7 @@ import * as github from '@actions/github'
 import {minimatch} from 'minimatch'
 
 import {getProjectId, addIssueToProject, copyProjectTemplate, getFirstProjectFromSearch} from './queries'
+import {matchLabelConditions} from './github/labels'
 
 import {mustGetOwnerTypeQuery, parseProjectName, parseProjectUrl} from './utils'
 
@@ -49,34 +50,8 @@ export async function projectLink(): Promise<void> {
     replaceWithSpaces: core.getInput('replace-with-spaces'),
   })
 
-  const labeled =
-    core
-      .getInput('labeled')
-      .split(',')
-      .map(l => l.trim().toLowerCase())
-      .filter(l => l.length > 0) ?? []
-  const labelOperator = core.getInput('label-operator').trim().toLocaleLowerCase()
-  const issueLabels: string[] = (issue?.labels ?? []).map((l: {name: string}) => l.name.toLowerCase())
-
-  core.debug(`Issue/PR owner: ${ownerName}`)
-  core.debug(`Issue/PR labels: ${issueLabels.join(', ')}`)
-
-  // Ensure the issue matches our `labeled` filter based on the label-operator.
-  if (labelOperator === 'and') {
-    if (!labeled.every(l => issueLabels.includes(l))) {
-      core.info(`Skipping issue ${issue?.number} because it doesn't match all the labels: ${labeled.join(', ')}`)
-      return
-    }
-  } else if (labelOperator === 'not') {
-    if (labeled.length > 0 && issueLabels.some(l => labeled.includes(l))) {
-      core.info(`Skipping issue ${issue?.number} because it contains one of the labels: ${labeled.join(', ')}`)
-      return
-    }
-  } else {
-    if (labeled.length > 0 && !issueLabels.some(l => labeled.includes(l))) {
-      core.info(`Skipping issue ${issue?.number} because it does not have one of the labels: ${labeled.join(', ')}`)
-      return
-    }
+  if (!matchLabelConditions({labels: issue?.labels, number: issue?.number})) {
+    throw new Error('Issue does not match label conditions')
   }
 
   let projectId = await getFirstProjectFromSearch({search: projectName, ownerType, ownerName})
@@ -110,7 +85,5 @@ export async function projectLink(): Promise<void> {
   core.info(`Pull Request: ${issue?.html_url}`)
   core.info(`Project: ${addResp.url}`)
 
-  core.setOutput('pullRequestUrl', issue?.html_url)
-  core.setOutput('project', addResp.url)
   core.setOutput('itemId', addResp.id)
 }
