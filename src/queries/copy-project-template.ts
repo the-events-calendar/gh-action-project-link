@@ -19,6 +19,8 @@ export const copyProjectTemplate = async (params: ProjectCopyTemplateParams): Pr
   const octokit = getOctokit()
   const {projectId, title, ownerId} = params
 
+  core.debug(`Copy Project Template Params: \n ${JSON.stringify(params, null, 2)}`)
+
   const copyProjectTemplateResp = await octokit.graphql<ProjectCopyTemplateResponse>(
     `mutation createProjectFromTemplate($input: CopyProjectV2Input!) {
     copyProjectV2(input: $input) {
