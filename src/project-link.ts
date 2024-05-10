@@ -13,7 +13,7 @@ export async function projectLink(): Promise<void> {
   const ownerId = github.context.payload.repository?.owner.id ?? ''
   const owner = github.context.payload.repository?.owner
 
-  if (!ownerName || !ownerId) {
+  if (!ownerName || !ownerId || !owner) {
     throw new Error('Could not determine repository owner')
   }
 
@@ -83,7 +83,7 @@ export async function projectLink(): Promise<void> {
     }
     core.debug(`Template Project ID: ${templateProjectId}`)
 
-    projectId = await copyProjectTemplate({projectId: templateProjectId, title: projectName, ownerId})
+    projectId = await copyProjectTemplate({projectId: templateProjectId, title: projectName, ownerId: owner.node_id})
   }
 
   const addResp = await addIssueToProject({projectId, contentId, issueNumber: issue?.number})

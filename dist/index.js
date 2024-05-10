@@ -174,7 +174,7 @@ function projectLink() {
         const ownerName = (_c = (_b = github.context.payload.repository) === null || _b === void 0 ? void 0 : _b.owner.login) !== null && _c !== void 0 ? _c : '';
         const ownerId = (_e = (_d = github.context.payload.repository) === null || _d === void 0 ? void 0 : _d.owner.id) !== null && _e !== void 0 ? _e : '';
         const owner = (_f = github.context.payload.repository) === null || _f === void 0 ? void 0 : _f.owner;
-        if (!ownerName || !ownerId) {
+        if (!ownerName || !ownerId || !owner) {
             throw new Error('Could not determine repository owner');
         }
         core.debug(`Owner Object: \n ${JSON.stringify(owner, null, 2)}`);
@@ -226,7 +226,7 @@ function projectLink() {
                 core.info(`No template project URL provided or invalid. Will create a project without a template.`);
             }
             core.debug(`Template Project ID: ${templateProjectId}`);
-            projectId = yield (0, queries_1.copyProjectTemplate)({ projectId: templateProjectId, title: projectName, ownerId });
+            projectId = yield (0, queries_1.copyProjectTemplate)({ projectId: templateProjectId, title: projectName, ownerId: owner.node_id });
         }
         const addResp = yield (0, queries_1.addIssueToProject)({ projectId, contentId, issueNumber: issue === null || issue === void 0 ? void 0 : issue.number });
         core.info(`Pull Request: ${issue === null || issue === void 0 ? void 0 : issue.html_url}`);
