@@ -56,6 +56,8 @@ export async function projectLink(): Promise<void> {
 
   let projectId = await getFirstProjectFromSearch({search: projectName, ownerType, ownerName})
 
+  core.debug(`Project ID: ${projectId}`)
+
   if (!projectId) {
     let projectNumber = parseInt(core.getInput('template-project-number') ?? 0, 10)
 

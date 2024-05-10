@@ -206,6 +206,7 @@ function projectLink() {
             throw new Error('Issue does not match label conditions');
         }
         let projectId = yield (0, queries_1.getFirstProjectFromSearch)({ search: projectName, ownerType, ownerName });
+        core.debug(`Project ID: ${projectId}`);
         if (!projectId) {
             let projectNumber = parseInt((_k = core.getInput('template-project-number')) !== null && _k !== void 0 ? _k : 0, 10);
             if (!projectNumber) {
