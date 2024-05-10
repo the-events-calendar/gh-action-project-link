@@ -353,6 +353,7 @@ const utils_1 = __nccwpck_require__(918);
 const copyProjectTemplate = (params) => __awaiter(void 0, void 0, void 0, function* () {
     const octokit = (0, utils_1.getOctokit)();
     const { projectId, title, ownerId } = params;
+    core.debug(`Copy Project Template Params: \n ${JSON.stringify(params, null, 2)}`);
     const copyProjectTemplateResp = yield octokit.graphql(`mutation createProjectFromTemplate($input: CopyProjectV2Input!) {
     copyProjectV2(input: $input) {
       projectV2 {
