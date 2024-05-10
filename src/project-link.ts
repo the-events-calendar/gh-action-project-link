@@ -68,7 +68,7 @@ export async function projectLink(): Promise<void> {
 
       core.debug(`Template Project URL: ${templateProjectUrl}`)
     }
-    core.debug(`Project number: ${projectNumber}`)
+    core.debug(`Template Project number: ${projectNumber}`)
 
     const templateProjectId = await getProjectId({ownerType, ownerName, projectNumber}).catch(err => {
       core.debug(`Error: ${err.message}`)
@@ -78,6 +78,7 @@ export async function projectLink(): Promise<void> {
     if (!templateProjectId) {
       core.info(`No template project URL provided or invalid. Will create a project without a template.`)
     }
+    core.debug(`Template Project ID: ${templateProjectId}`)
 
     projectId = await copyProjectTemplate({projectId: templateProjectId, title: projectName, ownerId})
   }

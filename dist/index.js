@@ -215,7 +215,7 @@ function projectLink() {
                 projectNumber = parsedProject === null || parsedProject === void 0 ? void 0 : parsedProject.projectNumber;
                 core.debug(`Template Project URL: ${templateProjectUrl}`);
             }
-            core.debug(`Project number: ${projectNumber}`);
+            core.debug(`Template Project number: ${projectNumber}`);
             const templateProjectId = yield (0, queries_1.getProjectId)({ ownerType, ownerName, projectNumber }).catch(err => {
                 core.debug(`Error: ${err.message}`);
                 return undefined;
@@ -223,6 +223,7 @@ function projectLink() {
             if (!templateProjectId) {
                 core.info(`No template project URL provided or invalid. Will create a project without a template.`);
             }
+            core.debug(`Template Project ID: ${templateProjectId}`);
             projectId = yield (0, queries_1.copyProjectTemplate)({ projectId: templateProjectId, title: projectName, ownerId });
         }
         const addResp = yield (0, queries_1.addIssueToProject)({ projectId, contentId, issueNumber: issue === null || issue === void 0 ? void 0 : issue.number });
