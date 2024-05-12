@@ -3,6 +3,53 @@ import * as github from '@actions/github'
 
 import {projectLink} from '../src/project-link'
 
+interface ValidIssuePayload {
+  base: {
+    ref: string
+  }
+  node_id: string
+  number: number
+  labels: {
+    name: string
+  }[]
+  html_url: string
+}
+const getValidIssuePayload = (extraPayload = {}): ValidIssuePayload => {
+  const validIssuePayload = {
+    base: {
+      ref: 'main',
+    },
+    // eslint-disable-next-line camelcase
+    node_id: 'mock_node_id',
+    number: 1,
+    labels: [],
+    // eslint-disable-next-line camelcase
+    html_url: 'https://github.com/stellarwp/gh-action-project-link/issues/74',
+  }
+
+  return {...validIssuePayload, ...extraPayload}
+}
+
+interface ValidRepositoryPayload {
+  name: string
+  owner: {
+    login: string
+    node_id: string
+  }
+}
+const getValidRepositoryPayload = (extraPayload = {}): ValidRepositoryPayload => {
+  const validRepositoryPayload = {
+    name: 'gh-actions-project-link',
+    owner: {
+      login: 'stellarwp',
+      // eslint-disable-next-line camelcase
+      node_id: 'mock_node_id',
+    },
+  }
+
+  return {...validRepositoryPayload, ...extraPayload}
+}
+
 describe('projectLink', () => {
   let outputs: Record<string, string>
 
@@ -26,21 +73,8 @@ describe('projectLink', () => {
 
   test('adds an issue from the same organization to the project', async () => {
     github.context.payload = {
-      issue: {
-        base: {
-          ref: 'main',
-        },
-        number: 1,
-        labels: [{name: 'bug'}],
-        // eslint-disable-next-line camelcase
-        html_url: 'https://github.com/stellarwp/gh-action-project-link/issues/74',
-      },
-      repository: {
-        name: 'gh-actions-project-link',
-        owner: {
-          login: 'stellarwp',
-        },
-      },
+      issue: getValidIssuePayload({labels: [{name: 'bug'}]}),
+      repository: getValidRepositoryPayload(),
     }
 
     mockGraphQL(
@@ -101,21 +135,8 @@ describe('projectLink', () => {
     })
 
     github.context.payload = {
-      issue: {
-        base: {
-          ref: 'main',
-        },
-        number: 1,
-        labels: [{name: 'bug'}],
-        // eslint-disable-next-line camelcase
-        html_url: 'https://github.com/stellarwp/gh-action-project-link/issues/74',
-      },
-      repository: {
-        name: 'gh-actions-project-link',
-        owner: {
-          login: 'stellarwp',
-        },
-      },
+      issue: getValidIssuePayload({labels: [{name: 'bug'}]}),
+      repository: getValidRepositoryPayload(),
     }
 
     mockGraphQL(
@@ -177,18 +198,8 @@ describe('projectLink', () => {
 
     github.context.payload = {
       // eslint-disable-next-line camelcase
-      pull_request: {
-        number: 1,
-        labels: [{name: 'bug'}],
-        // eslint-disable-next-line camelcase
-        html_url: 'https://github.com/stellarwp/gh-action-project-link/pull/136',
-      },
-      repository: {
-        name: 'gh-actions-project-link',
-        owner: {
-          login: 'stellarwp',
-        },
-      },
+      pull_request: getValidIssuePayload({labels: [{name: 'bug'}]}),
+      repository: getValidRepositoryPayload(),
     }
 
     mockGraphQL(
@@ -249,21 +260,8 @@ describe('projectLink', () => {
     })
 
     github.context.payload = {
-      issue: {
-        base: {
-          ref: 'main',
-        },
-        number: 1,
-        labels: [],
-        // eslint-disable-next-line camelcase
-        html_url: 'https://github.com/stellarwp/gh-action-project-link/issues/74',
-      },
-      repository: {
-        name: 'gh-actions-project-link',
-        owner: {
-          login: 'stellarwp',
-        },
-      },
+      issue: getValidIssuePayload({labels: [{name: 'not-bug'}]}),
+      repository: getValidRepositoryPayload(),
     }
 
     const infoSpy = jest.spyOn(core, 'info')
@@ -282,21 +280,8 @@ describe('projectLink', () => {
     })
 
     github.context.payload = {
-      issue: {
-        base: {
-          ref: 'main',
-        },
-        number: 1,
-        labels: [{name: 'bug'}, {name: 'new'}],
-        // eslint-disable-next-line camelcase
-        html_url: 'https://github.com/stellarwp/gh-action-project-link/issues/74',
-      },
-      repository: {
-        name: 'add-to-project',
-        owner: {
-          login: 'stellarwp',
-        },
-      },
+      issue: getValidIssuePayload({labels: [{name: 'bug'}, {name: 'new'}]}),
+      repository: getValidRepositoryPayload(),
     }
 
     mockGraphQL(
@@ -358,21 +343,8 @@ describe('projectLink', () => {
     })
 
     github.context.payload = {
-      issue: {
-        base: {
-          ref: 'main',
-        },
-        number: 1,
-        labels: [{name: 'bug'}, {name: 'other'}],
-        // eslint-disable-next-line camelcase
-        html_url: 'https://github.com/stellarwp/gh-action-project-link/issues/74',
-      },
-      repository: {
-        name: 'add-to-project',
-        owner: {
-          login: 'stellarwp',
-        },
-      },
+      issue: getValidIssuePayload({labels: [{name: 'bug'}, {name: 'other'}]}),
+      repository: getValidRepositoryPayload(),
     }
 
     const infoSpy = jest.spyOn(core, 'info')
@@ -391,21 +363,8 @@ describe('projectLink', () => {
     })
 
     github.context.payload = {
-      issue: {
-        base: {
-          ref: 'main',
-        },
-        number: 1,
-        labels: [{name: 'bug'}],
-        // eslint-disable-next-line camelcase
-        html_url: 'https://github.com/stellarwp/gh-action-project-link/issues/74',
-      },
-      repository: {
-        name: 'add-to-project',
-        owner: {
-          login: 'stellarwp',
-        },
-      },
+      issue: getValidIssuePayload({labels: [{name: 'bug'}]}),
+      repository: getValidRepositoryPayload(),
     }
 
     const infoSpy = jest.spyOn(core, 'info')
@@ -424,18 +383,8 @@ describe('projectLink', () => {
     })
 
     github.context.payload = {
-      issue: {
-        number: 1,
-        labels: [{name: 'other'}],
-        // eslint-disable-next-line camelcase
-        html_url: 'https://github.com/stellarwp/gh-action-project-link/issues/74',
-      },
-      repository: {
-        name: 'add-to-project',
-        owner: {
-          login: 'stellarwp',
-        },
-      },
+      issue: getValidIssuePayload({labels: [{name: 'Other'}]}),
+      repository: getValidRepositoryPayload(),
     }
 
     mockGraphQL(
@@ -496,18 +445,8 @@ describe('projectLink', () => {
     })
 
     github.context.payload = {
-      issue: {
-        number: 1,
-        labels: [{name: 'accessibility'}, {name: 'backend'}],
-        // eslint-disable-next-line camelcase
-        html_url: 'https://github.com/stellarwp/gh-action-project-link/issues/74',
-      },
-      repository: {
-        name: 'add-to-project',
-        owner: {
-          login: 'stellarwp',
-        },
-      },
+      issue: getValidIssuePayload({labels: [{name: 'accessibility'}, {name: 'backend'}]}),
+      repository: getValidRepositoryPayload(),
     }
 
     const gqlMock = mockGraphQL(
@@ -574,18 +513,8 @@ describe('projectLink', () => {
     })
 
     github.context.payload = {
-      issue: {
-        number: 1,
-        labels: [{name: 'data'}, {name: 'frontend'}, {name: 'improvement'}],
-        // eslint-disable-next-line camelcase
-        html_url: 'https://github.com/stellarwp/gh-action-project-link/issues/74',
-      },
-      repository: {
-        name: 'add-to-project',
-        owner: {
-          login: 'stellarwp',
-        },
-      },
+      issue: getValidIssuePayload({labels: [{name: 'data'}, {name: 'frontend'}, {name: 'improvement'}]}),
+      repository: getValidRepositoryPayload(),
     }
 
     const infoSpy = jest.spyOn(core, 'info')
@@ -605,19 +534,11 @@ describe('projectLink', () => {
     })
 
     github.context.payload = {
-      issue: {
-        number: 1,
+      issue: getValidIssuePayload({
         labels: [{name: 'accessibility'}, {name: 'backend'}, {name: 'bug'}],
         'label-operator': 'AND',
-        // eslint-disable-next-line camelcase
-        html_url: 'https://github.com/stellarwp/gh-action-project-link/issues/74',
-      },
-      repository: {
-        name: 'add-to-project',
-        owner: {
-          login: 'stellarwp',
-        },
-      },
+      }),
+      repository: getValidRepositoryPayload(),
     }
 
     const gqlMock = mockGraphQL(
@@ -683,18 +604,8 @@ describe('projectLink', () => {
     })
 
     github.context.payload = {
-      issue: {
-        number: 1,
-        labels: [],
-        // eslint-disable-next-line camelcase
-        html_url: 'https://github.com/stellarwp/gh-action-project-link/issues/74',
-      },
-      repository: {
-        name: 'add-to-project',
-        owner: {
-          login: 'stellarwp',
-        },
-      },
+      issue: getValidIssuePayload(),
+      repository: getValidRepositoryPayload(),
     }
 
     const infoSpy = jest.spyOn(core, 'info')
@@ -714,12 +625,7 @@ describe('projectLink', () => {
         // eslint-disable-next-line camelcase
         html_url: 'https://notgithub.com/stellarwp/gh-action-project-link/issues/74',
       },
-      repository: {
-        name: 'add-to-project',
-        owner: {
-          login: 'stellarwp',
-        },
-      },
+      repository: getValidRepositoryPayload(),
     }
 
     mockGraphQL(
@@ -781,18 +687,8 @@ describe('projectLink', () => {
     })
 
     github.context.payload = {
-      issue: {
-        number: 1,
-        labels: [{name: 'bug'}],
-        // eslint-disable-next-line camelcase
-        html_url: 'https://github.com/stellarwp/gh-action-project-link/issues/74',
-      },
-      repository: {
-        name: 'gh-action-project-link',
-        owner: {
-          login: 'stellarwp',
-        },
-      },
+      issue: getValidIssuePayload({labels: [{name: 'bug'}]}),
+      repository: getValidRepositoryPayload(),
     }
 
     const gqlMock = mockGraphQL(
@@ -856,18 +752,16 @@ describe('projectLink', () => {
     })
 
     github.context.payload = {
-      issue: {
-        number: 1,
+      issue: getValidIssuePayload({
         labels: [{name: 'bug'}],
         // eslint-disable-next-line camelcase
         html_url: 'https://github.com/monalisa/gh-action-project-link/issues/74',
-      },
-      repository: {
-        name: 'gh-actions-project-link',
-        owner: {
-          login: 'monalisa',
-        },
-      },
+      }),
+      repository: getValidRepositoryPayload({
+        login: 'monalisa',
+        // eslint-disable-next-line camelcase
+        node_id: 'valid_node_id',
+      }),
     }
 
     const gqlMock = mockGraphQL(
@@ -932,18 +826,8 @@ describe('projectLink', () => {
     })
 
     github.context.payload = {
-      issue: {
-        number: 1,
-        labels: [{name: 'foo'}, {name: 'BAR'}, {name: 'baz'}],
-        // eslint-disable-next-line camelcase
-        html_url: 'https://github.com/stellarwp/gh-action-project-link/issues/74',
-      },
-      repository: {
-        name: 'gh-actions-project-link',
-        owner: {
-          login: 'stellarwp',
-        },
-      },
+      issue: getValidIssuePayload({labels: [{name: 'foo'}, {name: 'BAR'}, {name: 'baz'}]}),
+      repository: getValidRepositoryPayload(),
     }
 
     mockGraphQL(

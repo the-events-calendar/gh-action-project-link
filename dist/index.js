@@ -182,6 +182,9 @@ function projectLink() {
         if (!issue) {
             throw new Error('No issue or pull request found in payload');
         }
+        if (!(0, labels_1.matchLabelConditions)({ labels: issue === null || issue === void 0 ? void 0 : issue.labels, number: issue === null || issue === void 0 ? void 0 : issue.number })) {
+            throw new Error('Issue does not match label conditions');
+        }
         if (!baseBranch) {
             throw new Error('This action can only be run on pull_request events');
         }
@@ -202,9 +205,6 @@ function projectLink() {
             suffixRemove: core.getInput('name-suffix-remove'),
             replaceWithSpaces: core.getInput('replace-with-spaces'),
         });
-        if (!(0, labels_1.matchLabelConditions)({ labels: issue === null || issue === void 0 ? void 0 : issue.labels, number: issue === null || issue === void 0 ? void 0 : issue.number })) {
-            throw new Error('Issue does not match label conditions');
-        }
         let projectId = yield (0, queries_1.getFirstProjectFromSearch)({ search: projectName, ownerType, ownerName });
         core.debug(`Project ID: ${projectId}`);
         if (!projectId) {

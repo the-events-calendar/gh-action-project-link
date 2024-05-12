@@ -25,6 +25,10 @@ export async function projectLink(): Promise<void> {
     throw new Error('No issue or pull request found in payload')
   }
 
+  if (!matchLabelConditions({labels: issue?.labels, number: issue?.number})) {
+    throw new Error('Issue does not match label conditions')
+  }
+
   if (!baseBranch) {
     throw new Error('This action can only be run on pull_request events')
   }
@@ -49,10 +53,6 @@ export async function projectLink(): Promise<void> {
     suffixRemove: core.getInput('name-suffix-remove'),
     replaceWithSpaces: core.getInput('replace-with-spaces'),
   })
-
-  if (!matchLabelConditions({labels: issue?.labels, number: issue?.number})) {
-    throw new Error('Issue does not match label conditions')
-  }
 
   let projectId = await getFirstProjectFromSearch({search: projectName, ownerType, ownerName})
 
