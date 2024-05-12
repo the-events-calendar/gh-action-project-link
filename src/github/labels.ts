@@ -2,11 +2,9 @@ import * as core from '@actions/core'
 
 export interface GetLabelsParams {
   number: number
-  labels: [
-    {
-      name: string
-    },
-  ]
+  labels: {
+    name: string
+  }[]
 }
 
 export const matchLabelConditions = async (issue: GetLabelsParams | undefined): Promise<boolean> => {
