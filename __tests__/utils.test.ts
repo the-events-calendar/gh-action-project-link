@@ -1,4 +1,4 @@
-import {mustGetOwnerTypeQuery, parseProjectName} from '../src/utils'
+import {mustGetOwnerTypeQuery, parseProjectName, parseProjectUrl} from '../src/utils'
 
 describe('mustGetOwnerTypeQuery', () => {
   test('returns organization for orgs ownerType', async () => {
@@ -82,5 +82,13 @@ describe('parseProjectName', () => {
     const projectName = parseProjectName({baseBranch, replaceWithSpaces})
 
     expect(projectName).toEqual('feature work branch issue')
+  })
+})
+
+describe('parseProjectName', () => {
+  test(`throws an error when url isn't a valid project url`, async () => {
+    expect(() => parseProjectUrl('https://github.com/orgs/github/repositories')).toThrow(
+      'Invalid project URL: https://github.com/orgs/github/repositories. Project URL should match the format <GitHub server domain name>/<orgs-or-users>/<ownerName>/projects/<projectNumber>',
+    )
   })
 })
