@@ -44,7 +44,7 @@ export const getFirstProjectFromSearch = async (params: ProjectListParams): Prom
   const octokit = getOctokit()
   const {search, ownerType, ownerName} = params
 
-  const getProjectsQuery = `query {
+  const getProjectsQuery = `query getProjectsQuery() {
     ${ownerType}(login:"${ownerName}") {
       projectsV2(first:100 query:"${search}") {
         totalCount

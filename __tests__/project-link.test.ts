@@ -252,25 +252,6 @@ describe('projectLink', () => {
     expect(outputs.itemId).toEqual('project-item-id')
   })
 
-  test('does not add un-matching issues with a label filter without label-operator', async () => {
-    mockGetInput({
-      'project-url': 'https://github.com/orgs/stellarwp/projects/1',
-      'github-token': 'gh_token',
-      labeled: 'bug',
-    })
-
-    github.context.payload = {
-      issue: getValidIssuePayload({labels: [{name: 'not-bug'}]}),
-      repository: getValidRepositoryPayload(),
-    }
-
-    const infoSpy = jest.spyOn(core, 'info')
-    const gqlMock = mockGraphQL()
-    await projectLink()
-    expect(infoSpy).toHaveBeenCalledWith(`Skipping issue 1 because it does not have one of the labels: bug`)
-    expect(gqlMock).not.toHaveBeenCalled()
-  })
-
   test('adds matching issues with labels filter with AND label-operator', async () => {
     mockGetInput({
       'project-url': 'https://github.com/orgs/stellarwp/projects/1',

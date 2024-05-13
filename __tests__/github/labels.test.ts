@@ -28,6 +28,23 @@ describe('matchLabelConditions', () => {
 
     expect(matchedLabelConditions).toEqual(true)
   })
+
+  test('does not add un-matching issues with a label filter without label-operator', async () => {
+    mockGetInput({
+      labeled: 'bug',
+    })
+    const issue: GetLabelsParams = {
+      number: 1,
+      labels: [
+        {
+          name: 'not-bug',
+        },
+      ],
+    }
+    const matchedLabelConditions = await matchLabelConditions(issue)
+
+    expect(matchedLabelConditions).toEqual(false)
+  })
 })
 
 function mockGetInput(mocks: Record<string, string>): jest.SpyInstance {
