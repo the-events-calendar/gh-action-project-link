@@ -238,9 +238,3 @@ function mockGetInput(mocks: Record<string, string>): jest.SpyInstance {
   const mock = (key: string) => mocks[key] ?? ''
   return jest.spyOn(core, 'getInput').mockImplementation(mock)
 }
-
-function mockSetOutput(): Record<string, string> {
-  const output: Record<string, string> = {}
-  jest.spyOn(core, 'setOutput').mockImplementation((key, value) => (output[key] = value))
-  return output
-}
