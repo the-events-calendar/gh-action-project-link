@@ -1,11 +1,8 @@
 import * as core from '@actions/core'
-import * as github from '@actions/github'
 
 import {GetLabelsParams, matchLabelConditions} from '../../src/github/labels'
 
 describe('matchLabelConditions', () => {
-  let outputs: Record<string, string>
-
   beforeEach(() => {
     jest.spyOn(process.stdout, 'write').mockImplementation(() => true)
   })
@@ -15,8 +12,6 @@ describe('matchLabelConditions', () => {
       labeled: '',
       'label-operator': '',
     })
-
-    outputs = mockSetOutput()
   })
 
   test('validate label defaults to true', async () => {
