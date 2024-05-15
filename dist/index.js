@@ -491,7 +491,7 @@ const getFirstProjectFromSearch = (params) => __awaiter(void 0, void 0, void 0, 
     var _a, _b;
     const octokit = (0, utils_1.getOctokit)();
     const { search, ownerType, ownerName } = params;
-    const getProjectsQuery = `query getProjectsQuery() {
+    const getProjectsQuery = `query getProjectsQuery {
     ${ownerType}(login:"${ownerName}") {
       projectsV2(first:100 query:"${search}") {
         totalCount
