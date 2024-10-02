@@ -4,7 +4,7 @@
   "version": "0.1.1",
   "author": "The Events Calendar",
   "dependencies": {
-    "@actions/core": "^1.10.1",
+    "@actions/core": "^1.11.0",
     "@actions/github": "^6.0.0",
     "minimatch": "^10.0.1"
   },
