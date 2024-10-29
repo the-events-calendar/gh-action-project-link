@@ -540,10 +540,12 @@ const parseProjectName = (params) => {
     const { baseBranch, prefixRemove, suffixRemove, replaceWithSpaces } = params;
     let projectName = baseBranch;
     if (prefixRemove) {
-        projectName = projectName.replace(new RegExp(`^${prefixRemove}`, 'i'), '');
+        const safePrefixRemove = _.escapeRegExp(prefixRemove);
+        projectName = projectName.replace(new RegExp(`^${safePrefixRemove}`, 'i'), '');
     }
     if (suffixRemove) {
-        projectName = projectName.replace(new RegExp(`${suffixRemove}$`, 'i'), '');
+        const safeSuffixRemove = _.escapeRegExp(suffixRemove);
+        projectName = projectName.replace(new RegExp(`${safeSuffixRemove}$`, 'i'), '');
     }
     if (replaceWithSpaces) {
         for (const charToReplace of replaceWithSpaces.split('')) {
