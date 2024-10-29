@@ -1,5 +1,6 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
+import * as _ from 'lodash'
 
 /**
  * Given a GitHub token, return an Octokit instance.
@@ -42,7 +43,8 @@ export const parseProjectName = (params: ParseProjectName): string => {
 
   if (replaceWithSpaces) {
     for (const charToReplace of replaceWithSpaces.split('')) {
-      projectName = projectName.replace(new RegExp(charToReplace, 'g'), ' ')
+      const safeCharToReplace = _.escapeRegExp(charToReplace)
+      projectName = projectName.replace(new RegExp(safeCharToReplace, 'g'), ' ')
     }
   }
 
