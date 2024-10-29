@@ -34,11 +34,13 @@ export const parseProjectName = (params: ParseProjectName): string => {
 
   let projectName = baseBranch
   if (prefixRemove) {
-    projectName = projectName.replace(new RegExp(`^${prefixRemove}`, 'i'), '')
+    const safePrefixRemove = _.escapeRegExp(prefixRemove)
+    projectName = projectName.replace(new RegExp(`^${safePrefixRemove}`, 'i'), '')
   }
 
   if (suffixRemove) {
-    projectName = projectName.replace(new RegExp(`${suffixRemove}$`, 'i'), '')
+    const safeSuffixRemove = _.escapeRegExp(suffixRemove)
+    projectName = projectName.replace(new RegExp(`${safeSuffixRemove}$`, 'i'), '')
   }
 
   if (replaceWithSpaces) {
